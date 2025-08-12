@@ -6,6 +6,26 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Taskava is an enterprise project management platform (Asana/ClickUp alternative) with a multi-module Spring Boot backend and React TypeScript frontend. The architecture emphasizes local-first development with Docker containers mimicking AWS services.
 
+## Context Files (CLAUDE.md)
+
+This project uses CLAUDE.md files in major directories to maintain context. Always check for and update these files when working in these areas:
+
+### Backend Context Files
+- `/taskava-backend/CLAUDE.md` - Backend architecture overview
+- `/taskava-backend/taskava-data-access/CLAUDE.md` - Database and JPA patterns
+- `/taskava-backend/taskava-core-service/CLAUDE.md` - Business logic patterns
+- `/taskava-backend/taskava-api-gateway/CLAUDE.md` - REST API and controllers
+
+### Frontend Context Files
+- `/taskava-frontend/CLAUDE.md` - Frontend architecture and stack
+- `/taskava-frontend/src/CLAUDE.md` - Source code organization
+- `/taskava-frontend/src/components/CLAUDE.md` - Component patterns and guidelines
+
+### Infrastructure Context Files
+- `/infrastructure/CLAUDE.md` - Deployment and AWS infrastructure
+
+**Important**: When making significant changes to any module, update the corresponding CLAUDE.md file to maintain accurate context for future development.
+
 ## Build and Run Commands
 
 ### Full Stack Development
