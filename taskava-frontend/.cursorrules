@@ -1,0 +1,111 @@
+# ShadCN UI Development Rules for Taskava
+
+## Core Principles
+1. Always use the shadcn-ui MCP server tools before implementing any UI component
+2. Check component demos using `get_component_demo` for proper usage patterns
+3. Follow ShadCN's design system and component composition patterns
+4. Maintain consistency across the application
+
+## Component Usage Rules
+1. **Before using any component:**
+   - Use `get_component_metadata` to check dependencies
+   - Use `get_component_demo` to understand proper implementation
+   - Never guess component props or structure
+
+2. **Component Installation:**
+   - Always install components via CLI: `npx shadcn-ui@latest add [component-name]`
+   - Check if component is already installed before adding
+
+3. **Styling Rules:**
+   - Use Tailwind CSS utility classes
+   - Respect the existing theme variables
+   - Avoid inline styles unless absolutely necessary
+   - Use cn() utility for conditional classes
+
+## Project Structure
+- `/components/ui/` - ShadCN UI components (don't modify directly)
+- `/components/` - Custom components that use ShadCN
+- `/src/pages/` - Page components
+- `/src/hooks/` - Custom React hooks
+- `/src/services/` - API services
+- `/src/store/` - Zustand state management
+- `/src/types/` - TypeScript type definitions
+- `/src/utils/` - Utility functions
+
+## Implementation Process
+1. Analyze the task requirements
+2. List required ShadCN components using `list_components`
+3. Get component demos for each required component
+4. Build the UI structure following the demos
+5. Apply custom business logic
+6. Test responsiveness and accessibility
+
+## Code Quality Standards
+- Use TypeScript for all components
+- Add proper type definitions
+- Include loading and error states
+- Implement proper form validation
+- Ensure mobile responsiveness
+- Follow accessibility best practices
+
+## Common Patterns for Taskava
+1. **Forms**: Use Form, Input, Button, Label components with react-hook-form and Zod
+2. **Task Display**: Use Card, Badge, Avatar for task cards
+3. **Project Views**: Use Table, DataTable for list view, Board pattern for Kanban
+4. **Navigation**: Use NavigationMenu, Tabs, Breadcrumb, Command (for search)
+5. **Feedback**: Use Toast, Alert, Dialog for user feedback
+6. **Layout**: Use proper spacing with space-y-*, space-x-* utilities
+
+## Taskava-Specific Component Guidelines
+
+### Task Components
+- TaskCard: Use Card with Header, Content, Footer sections
+- TaskList: Use ScrollArea for long lists
+- TaskBoard: Use DragAndDrop patterns with Card components
+- TaskForm: Use Form with proper validation
+
+### Project Components
+- ProjectCard: Card with Badge for status, Avatar for members
+- ProjectGrid: Grid layout with responsive columns
+- ProjectHeader: Use PageHeader pattern with actions
+
+### Common UI Patterns
+- Empty States: Use EmptyState component with illustration
+- Loading States: Use Skeleton components
+- Error States: Use Alert with proper error messages
+- Search: Use Command component for command palette
+
+## MCP Server Usage in Development
+1. Always check available components first: `list_components`
+2. Get metadata before using: `get_component_metadata`
+3. Study demos thoroughly: `get_component_demo`
+4. Follow the exact patterns from demos
+5. Don't modify core UI components in `/components/ui/`
+
+## Testing Requirements
+- Test all interactive elements
+- Verify keyboard navigation
+- Check screen reader compatibility
+- Test on mobile viewports
+- Validate form inputs properly
+
+## Performance Guidelines
+- Use React.memo for expensive components
+- Implement virtual scrolling for long lists
+- Lazy load heavy components
+- Optimize images and assets
+- Use proper loading states
+
+## Accessibility Standards
+- All interactive elements must be keyboard accessible
+- Use proper ARIA labels
+- Maintain color contrast ratios
+- Provide alt text for images
+- Support screen readers
+
+## Remember
+- The MCP server is your source of truth for component usage
+- Never guess component implementation
+- Always check demos before implementing
+- Maintain consistency across the app
+- Follow the established patterns

@@ -253,3 +253,40 @@ describe('TaskCard', () => {
 4. **Business logic in UI**: Keep in services/hooks
 5. **Inline functions**: Use useCallback for handlers
 6. **Missing keys**: Always provide stable keys in lists
+
+## ShadCN UI MCP Server Integration
+
+**Important**: We use the ShadCN UI MCP server for all component development. This ensures consistency and proper implementation.
+
+### MCP Server Tools Available
+- `mcp__shadcn-ui__list_components` - List all available components
+- `mcp__shadcn-ui__get_component` - Get component source code
+- `mcp__shadcn-ui__get_component_demo` - Get usage examples
+- `mcp__shadcn-ui__get_component_metadata` - Get dependencies and info
+- `mcp__shadcn-ui__get_block` - Get pre-built blocks (dashboards, etc.)
+- `mcp__shadcn-ui__list_blocks` - List available blocks
+
+### Development Workflow with MCP
+1. **Before implementing any UI component**:
+   - Use `list_components` to see what's available
+   - Use `get_component_metadata` to check dependencies
+   - Use `get_component_demo` to understand usage
+
+2. **Implementation**:
+   - Follow the exact patterns from demos
+   - Don't modify `/components/ui/` files
+   - Create custom components that compose ShadCN components
+
+3. **Example workflow**:
+   ```typescript
+   // 1. Check if Dialog component exists
+   // Use: mcp__shadcn-ui__list_components
+   
+   // 2. Get Dialog demo
+   // Use: mcp__shadcn-ui__get_component_demo with componentName: "dialog"
+   
+   // 3. Implement following the demo pattern
+   ```
+
+### Rules File
+See `.cursorrules` in the frontend root for detailed ShadCN UI development rules that must be followed.

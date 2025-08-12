@@ -180,3 +180,30 @@ All endpoints follow REST conventions:
 - Validate migrations: Run `./gradlew :taskava-data-access:flywayValidate`
 - API testing: Swagger UI at `http://localhost:8080/api/swagger-ui.html`
 - Email testing: Mailhog UI at `http://localhost:8025`
+
+## Frontend UI Development with ShadCN
+
+**Critical**: We use the ShadCN UI MCP server for all frontend component development. This is mandatory to ensure consistency and proper implementation.
+
+### MCP Server Tools
+The following MCP tools are available and MUST be used:
+- `mcp__shadcn-ui__list_components` - List all available components
+- `mcp__shadcn-ui__get_component` - Get component source code
+- `mcp__shadcn-ui__get_component_demo` - Get usage examples
+- `mcp__shadcn-ui__get_component_metadata` - Get dependencies
+- `mcp__shadcn-ui__get_block` - Get pre-built blocks
+- `mcp__shadcn-ui__list_blocks` - List available blocks
+
+### UI Development Workflow
+1. **Always start by checking available components**: Use `list_components`
+2. **Get component demos before implementing**: Use `get_component_demo`
+3. **Check dependencies**: Use `get_component_metadata`
+4. **Follow demo patterns exactly**: Don't guess implementation
+5. **Never modify `/components/ui/` directly**: These are ShadCN base components
+
+### Rules Enforcement
+- `.cursorrules` file in frontend contains mandatory ShadCN UI rules
+- All UI PRs must demonstrate MCP server usage
+- Component implementations must match ShadCN patterns
+
+See `/taskava-frontend/docs/design/shadcn-mcp-setup-guide.md` for complete setup instructions.
