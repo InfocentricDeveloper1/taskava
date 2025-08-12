@@ -1,0 +1,141 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: taskava-postgres
+    environment:
+      POSTGRES_DB: taskava
+      POSTGRES_USER: taskava
+      POSTGRES_PASSWORD: taskava
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init-scripts:/docker-entrypoint-initdb.d
+    networks:
+      - taskava-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U taskava"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: taskava-redis
+    ports:
+      - "6379:6379"
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    networks:
+      - taskava-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  localstack:
+    image: localstack/localstack:latest
+    container_name: taskava-localstack
+    ports:
+      - "4566:4566"
+      - "4571:4571"
+    environment:
+      - SERVICES=s3,ses,cognito
+      - DEBUG=1
+      - DATA_DIR=/tmp/localstack/data
+      - LAMBDA_EXECUTOR=local
+      - AWS_ACCESS_KEY_ID=test
+      - AWS_SECRET_ACCESS_KEY=test
+      - AWS_DEFAULT_REGION=us-east-1
+    volumes:
+      - localstack_data:/tmp/localstack
+      - ./aws-init:/docker-entrypoint-initaws.d
+    networks:
+      - taskava-network
+
+  mailhog:
+    image: mailhog/mailhog:latest
+    container_name: taskava-mailhog
+    ports:
+      - "1025:1025"
+      - "8025:8025"
+    networks:
+      - taskava-network
+
+  backend:
+    build:
+      context: ./taskava-backend
+      dockerfile: Dockerfile
+    container_name: taskava-backend
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - DATABASE_URL=jdbc:postgresql://postgres:5432/taskava
+      - DATABASE_USERNAME=taskava
+      - DATABASE_PASSWORD=taskava
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - AWS_ENDPOINT=http://localstack:4566
+      - MAIL_HOST=mailhog
+      - MAIL_PORT=1025
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./taskava-backend/logs:/app/logs
+    networks:
+      - taskava-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/api/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  frontend:
+    build:
+      context: ./taskava-frontend
+      dockerfile: Dockerfile
+    container_name: taskava-frontend
+    depends_on:
+      - backend
+    environment:
+      - VITE_API_URL=http://localhost:8080/api
+      - VITE_WS_URL=ws://localhost:8080/api/ws
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./taskava-frontend:/app
+      - /app/node_modules
+    networks:
+      - taskava-network
+
+  nginx:
+    image: nginx:alpine
+    container_name: taskava-nginx
+    depends_on:
+      - backend
+      - frontend
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ./nginx/ssl:/etc/nginx/ssl
+    networks:
+      - taskava-network
+
+volumes:
+  postgres_data:
+  redis_data:
+  localstack_data:
+
+networks:
+  taskava-network:
+    driver: bridge

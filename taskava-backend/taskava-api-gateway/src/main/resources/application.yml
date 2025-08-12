@@ -1,0 +1,200 @@
+spring:
+  application:
+    name: taskava-api
+  profiles:
+    active: ${SPRING_PROFILES_ACTIVE:local}
+
+  datasource:
+    url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/taskava}
+    username: ${DATABASE_USERNAME:taskava}
+    password: ${DATABASE_PASSWORD:taskava}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: ${DB_POOL_SIZE:20}
+      minimum-idle: 5
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+        jdbc:
+          batch_size: 20
+        order_inserts: true
+        order_updates: true
+        generate_statistics: ${HIBERNATE_STATS:false}
+    show-sql: ${JPA_SHOW_SQL:false}
+    open-in-view: false
+
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+    locations: classpath:db/migration
+    table: flyway_schema_history
+
+  cache:
+    type: caffeine
+    caffeine:
+      spec: maximumSize=1000,expireAfterWrite=5m
+
+  servlet:
+    multipart:
+      max-file-size: ${MAX_FILE_SIZE:100MB}
+      max-request-size: ${MAX_REQUEST_SIZE:100MB}
+
+  jackson:
+    serialization:
+      write-dates-as-timestamps: false
+    deserialization:
+      fail-on-unknown-properties: false
+    default-property-inclusion: non_null
+
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${JWT_ISSUER_URI:}
+          jwk-set-uri: ${JWT_JWK_SET_URI:}
+
+server:
+  port: ${SERVER_PORT:8080}
+  servlet:
+    context-path: /api
+  compression:
+    enabled: true
+    mime-types: application/json,application/xml,text/html,text/xml,text/plain,application/javascript,text/css
+  error:
+    include-message: always
+    include-binding-errors: always
+    include-stacktrace: ${ERROR_INCLUDE_STACKTRACE:on_param}
+    include-exception: false
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus,loggers
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: ${HEALTH_SHOW_DETAILS:when_authorized}
+      probes:
+        enabled: true
+    metrics:
+      enabled: true
+    prometheus:
+      enabled: true
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+    tags:
+      application: ${spring.application.name}
+      environment: ${spring.profiles.active}
+
+logging:
+  level:
+    root: ${LOG_LEVEL_ROOT:INFO}
+    com.taskava: ${LOG_LEVEL_APP:DEBUG}
+    org.springframework.web: ${LOG_LEVEL_WEB:INFO}
+    org.springframework.security: ${LOG_LEVEL_SECURITY:INFO}
+    org.hibernate.SQL: ${LOG_LEVEL_SQL:INFO}
+    org.hibernate.type.descriptor.sql.BasicBinder: ${LOG_LEVEL_SQL_PARAMS:INFO}
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+  file:
+    name: logs/taskava.log
+    max-size: 10MB
+    max-history: 30
+
+springdoc:
+  api-docs:
+    enabled: true
+    path: /v3/api-docs
+  swagger-ui:
+    enabled: true
+    path: /swagger-ui.html
+    config-url: /v3/api-docs/swagger-config
+    url: /v3/api-docs
+    display-request-duration: true
+    groups-order: ASC
+    operations-sorter: alpha
+    tags-sorter: alpha
+  show-actuator: false
+  packages-to-scan: com.taskava.api.controller
+
+cors:
+  allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:3000}
+  allowed-methods: GET,POST,PUT,DELETE,PATCH,OPTIONS
+  allowed-headers: "*"
+  exposed-headers: X-Total-Count,X-Page-Number,X-Page-Size
+  allow-credentials: true
+  max-age: 3600
+
+jwt:
+  secret: ${JWT_SECRET:your-256-bit-secret-key-for-jwt-token-generation-change-in-production}
+  expiration: ${JWT_EXPIRATION:86400000}
+  refresh-expiration: ${JWT_REFRESH_EXPIRATION:604800000}
+  issuer: ${JWT_ISSUER:taskava}
+
+aws:
+  region: ${AWS_REGION:us-east-1}
+  s3:
+    bucket-name: ${S3_BUCKET_NAME:taskava-files}
+    endpoint: ${S3_ENDPOINT:}
+  cognito:
+    user-pool-id: ${COGNITO_USER_POOL_ID:}
+    client-id: ${COGNITO_CLIENT_ID:}
+    client-secret: ${COGNITO_CLIENT_SECRET:}
+
+rate-limiting:
+  enabled: ${RATE_LIMITING_ENABLED:true}
+  default-capacity: ${RATE_LIMIT_CAPACITY:100}
+  default-tokens: ${RATE_LIMIT_TOKENS:100}
+  default-period: ${RATE_LIMIT_PERIOD:60}
+
+notification:
+  email:
+    enabled: ${EMAIL_ENABLED:false}
+    from: ${EMAIL_FROM:noreply@taskava.com}
+    smtp:
+      host: ${SMTP_HOST:smtp.gmail.com}
+      port: ${SMTP_PORT:587}
+      username: ${SMTP_USERNAME:}
+      password: ${SMTP_PASSWORD:}
+      auth: true
+      starttls:
+        enable: true
+
+websocket:
+  enabled: true
+  endpoint: /ws
+  destination-prefix: /app
+  broker-prefix: /topic,/queue
+  heartbeat: 25000,25000
+
+task:
+  scheduler:
+    pool-size: ${SCHEDULER_POOL_SIZE:10}
+    thread-name-prefix: taskava-scheduler-
+  async:
+    core-pool-size: ${ASYNC_CORE_POOL_SIZE:10}
+    max-pool-size: ${ASYNC_MAX_POOL_SIZE:50}
+    queue-capacity: ${ASYNC_QUEUE_CAPACITY:1000}
+    thread-name-prefix: taskava-async-
+
+application:
+  name: Taskava
+  version: 1.0.0
+  description: Enterprise Project Management Platform
+  default-page-size: 20
+  max-page-size: 100
+  file-upload:
+    max-size: 104857600
+    allowed-types: image/jpeg,image/png,image/gif,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document

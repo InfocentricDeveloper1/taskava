@@ -1,0 +1,145 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  backend-test:
+    runs-on: ubuntu-latest
+    
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: taskava
+          POSTGRES_PASSWORD: taskava
+          POSTGRES_DB: taskava_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Set up JDK 17
+      uses: actions/setup-java@v3
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+        cache: maven
+    
+    - name: Run Backend Tests
+      working-directory: ./taskava-backend
+      run: |
+        mvn clean test
+      env:
+        DATABASE_URL: jdbc:postgresql://localhost:5432/taskava_test
+        DATABASE_USERNAME: taskava
+        DATABASE_PASSWORD: taskava
+    
+    - name: Generate Test Report
+      if: always()
+      working-directory: ./taskava-backend
+      run: mvn surefire-report:report
+    
+    - name: Upload Test Results
+      if: always()
+      uses: actions/upload-artifact@v3
+      with:
+        name: backend-test-results
+        path: taskava-backend/**/target/surefire-reports/
+
+  frontend-test:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18'
+        cache: 'npm'
+        cache-dependency-path: taskava-frontend/package-lock.json
+    
+    - name: Install Dependencies
+      working-directory: ./taskava-frontend
+      run: npm ci
+    
+    - name: Run Linter
+      working-directory: ./taskava-frontend
+      run: npm run lint --if-present
+    
+    - name: Run Tests
+      working-directory: ./taskava-frontend
+      run: npm test --if-present
+    
+    - name: Build Frontend
+      working-directory: ./taskava-frontend
+      run: npm run build
+
+  docker-build:
+    needs: [backend-test, frontend-test]
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop')
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v2
+    
+    - name: Log in to Docker Hub
+      uses: docker/login-action@v2
+      with:
+        username: ${{ secrets.DOCKER_USERNAME }}
+        password: ${{ secrets.DOCKER_PASSWORD }}
+    
+    - name: Build and push Backend Docker image
+      uses: docker/build-push-action@v4
+      with:
+        context: ./taskava-backend
+        push: true
+        tags: |
+          ${{ secrets.DOCKER_USERNAME }}/taskava-backend:latest
+          ${{ secrets.DOCKER_USERNAME }}/taskava-backend:${{ github.sha }}
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+    
+    - name: Build and push Frontend Docker image
+      uses: docker/build-push-action@v4
+      with:
+        context: ./taskava-frontend
+        push: true
+        tags: |
+          ${{ secrets.DOCKER_USERNAME }}/taskava-frontend:latest
+          ${{ secrets.DOCKER_USERNAME }}/taskava-frontend:${{ github.sha }}
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+
+  security-scan:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Run Trivy vulnerability scanner
+      uses: aquasecurity/trivy-action@master
+      with:
+        scan-type: 'fs'
+        scan-ref: '.'
+        format: 'sarif'
+        output: 'trivy-results.sarif'
+    
+    - name: Upload Trivy results to GitHub Security
+      uses: github/codeql-action/upload-sarif@v2
+      if: always()
+      with:
+        sarif_file: 'trivy-results.sarif'
