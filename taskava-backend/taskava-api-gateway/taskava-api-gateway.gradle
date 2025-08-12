@@ -1,0 +1,92 @@
+apply plugin: 'org.springframework.boot'
+apply plugin: 'com.google.cloud.tools.jib'
+
+description = 'Taskava API Gateway - REST controllers and API configuration'
+
+dependencies {
+    implementation project(':taskava-common')
+    implementation project(':taskava-core-service')
+    implementation project(':taskava-security')
+    implementation project(':taskava-integration')
+    
+    // Spring Boot Web
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
+    
+    // WebSocket support
+    implementation 'org.springframework.boot:spring-boot-starter-websocket'
+    
+    // API Documentation
+    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui'
+    
+    // Metrics
+    implementation 'io.micrometer:micrometer-registry-prometheus'
+    
+    // Rate limiting
+    implementation 'com.github.vladimir-bukhtoyarov:bucket4j-core:7.6.0'
+    
+    // Development tools
+    developmentOnly 'org.springframework.boot:spring-boot-devtools'
+    
+    // Configuration processor
+    annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
+    
+    // Testing
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation 'org.springframework.security:spring-security-test'
+    testImplementation 'com.jayway.jsonpath:json-path'
+}
+
+// This is the main application module
+springBoot {
+    mainClass = 'com.taskava.api.TaskavaApplication'
+}
+
+// Jib configuration for containerization
+jib {
+    from {
+        image = 'eclipse-temurin:17-jre-alpine'
+    }
+    to {
+        image = 'taskava-backend'
+        tags = ['latest', version]
+    }
+    container {
+        ports = ['8080']
+        mainClass = 'com.taskava.api.TaskavaApplication'
+        jvmFlags = [
+            '-Xms512m',
+            '-Xmx1024m',
+            '-XX:+UseG1GC',
+            '-XX:MaxGCPauseMillis=100',
+            '-XX:+UseStringDeduplication'
+        ]
+        environment = [
+            'SPRING_PROFILES_ACTIVE': 'docker'
+        ]
+        creationTime = 'USE_CURRENT_TIMESTAMP'
+        format = 'OCI'
+    }
+}
+
+// Bootable JAR configuration
+bootJar {
+    archiveBaseName = 'taskava-api'
+    archiveVersion = version
+    manifest {
+        attributes(
+            'Implementation-Title': 'Taskava API',
+            'Implementation-Version': version,
+            'Main-Class': 'org.springframework.boot.loader.JarLauncher'
+        )
+    }
+}
+
+// Task to run the application locally
+task runLocal(type: JavaExec) {
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = 'com.taskava.api.TaskavaApplication'
+    environment 'SPRING_PROFILES_ACTIVE', 'local'
+    jvmArgs = ['-Xmx1024m', '-XX:+UseG1GC']
+}

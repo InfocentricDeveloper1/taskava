@@ -1,0 +1,30 @@
+description = 'Taskava Integration - External service integrations (AWS, email, etc.)'
+
+dependencies {
+    implementation project(':taskava-common')
+    
+    // Spring Boot
+    implementation 'org.springframework.boot:spring-boot-starter'
+    
+    // AWS SDK
+    implementation platform('software.amazon.awssdk:bom')
+    implementation 'software.amazon.awssdk:s3'
+    implementation 'software.amazon.awssdk:ses'
+    implementation 'software.amazon.awssdk:sqs'
+    implementation 'software.amazon.awssdk:secretsmanager'
+    
+    // Email
+    implementation 'org.springframework.boot:spring-boot-starter-mail'
+    implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
+    
+    // HTTP Client
+    implementation 'org.springframework.boot:spring-boot-starter-webflux'
+    
+    // File processing
+    implementation 'commons-io:commons-io'
+    implementation 'org.apache.tika:tika-core:2.9.1'
+    
+    // Testing
+    testImplementation 'org.testcontainers:localstack'
+    testImplementation 'com.icegreen:greenmail-junit5:2.0.1'
+}

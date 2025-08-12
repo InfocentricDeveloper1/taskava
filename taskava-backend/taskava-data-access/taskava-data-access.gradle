@@ -1,0 +1,56 @@
+apply plugin: 'org.flywaydb.flyway'
+
+description = 'Taskava Data Access - JPA entities, repositories, and database migrations'
+
+dependencies {
+    implementation project(':taskava-common')
+    
+    // Spring Data JPA
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
+    
+    // Database
+    implementation 'org.postgresql:postgresql'
+    implementation 'org.flywaydb:flyway-core'
+    
+    // Hibernate Envers for auditing
+    implementation 'org.hibernate.orm:hibernate-envers'
+    
+    // Query DSL (optional, for type-safe queries)
+    implementation 'com.querydsl:querydsl-jpa:5.0.0:jakarta'
+    annotationProcessor 'com.querydsl:querydsl-apt:5.0.0:jakarta'
+    annotationProcessor 'jakarta.persistence:jakarta.persistence-api'
+    
+    // Testing
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation 'org.testcontainers:postgresql'
+    testImplementation 'org.testcontainers:junit-jupiter'
+}
+
+// Flyway configuration
+flyway {
+    url = System.getenv('DATABASE_URL') ?: 'jdbc:postgresql://localhost:5432/taskava'
+    user = System.getenv('DATABASE_USERNAME') ?: 'taskava'
+    password = System.getenv('DATABASE_PASSWORD') ?: 'taskava'
+    schemas = ['public']
+    locations = ['classpath:db/migration']
+    baselineOnMigrate = true
+}
+
+// Task to create a new migration
+task createMigration {
+    doLast {
+        def timestamp = new Date().format('yyyyMMddHHmmss')
+        def migrationName = project.hasProperty('name') ? project.property('name') : 'new_migration'
+        def fileName = "V${timestamp}__${migrationName}.sql"
+        def file = file("src/main/resources/db/migration/${fileName}")
+        file.parentFile.mkdirs()
+        file.text = """-- Migration: ${migrationName}
+-- Author: ${System.getProperty('user.name')}
+-- Date: ${new Date()}
+
+-- Write your migration SQL here
+"""
+        println "Created new migration: ${file.absolutePath}"
+    }
+}

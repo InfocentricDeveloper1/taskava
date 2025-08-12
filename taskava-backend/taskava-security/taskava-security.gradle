@@ -1,0 +1,22 @@
+description = 'Taskava Security - Authentication, authorization, and security configurations'
+
+dependencies {
+    implementation project(':taskava-common')
+    implementation project(':taskava-data-access')
+    
+    // Spring Security
+    implementation 'org.springframework.boot:spring-boot-starter-security'
+    implementation 'org.springframework.security:spring-security-oauth2-resource-server'
+    implementation 'org.springframework.security:spring-security-oauth2-jose'
+    
+    // JWT
+    implementation 'io.jsonwebtoken:jjwt-api'
+    runtimeOnly 'io.jsonwebtoken:jjwt-impl'
+    runtimeOnly 'io.jsonwebtoken:jjwt-jackson'
+    
+    // AWS Cognito (optional)
+    implementation 'software.amazon.awssdk:cognitoidentityprovider'
+    
+    // Testing
+    testImplementation 'org.springframework.security:spring-security-test'
+}

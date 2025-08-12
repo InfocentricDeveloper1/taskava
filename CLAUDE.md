@@ -14,12 +14,13 @@ Taskava is an enterprise project management platform (Asana/ClickUp alternative)
 docker-compose up -d postgres redis localstack mailhog
 
 # Backend (from taskava-backend/)
-./mvnw clean install              # Build all modules
-./mvnw spring-boot:run -pl taskava-api-gateway  # Run application
-./mvnw test                       # Run all unit tests
-./mvnw verify                     # Run integration tests
-./mvnw test -Dtest=TestClassName  # Run specific test class
-./mvnw flyway:migrate -pl taskava-data-access  # Run database migrations
+./gradlew clean build             # Build all modules
+./gradlew bootRun                 # Run application
+./gradlew test                    # Run all unit tests
+./gradlew integrationTest         # Run integration tests (if configured)
+./gradlew test --tests TestClassName  # Run specific test class
+./gradlew :taskava-data-access:flywayMigrate  # Run database migrations
+./gradlew createMigration -Pname=add_new_table  # Create new migration
 
 # Frontend (from taskava-frontend/)
 npm install                       # Install dependencies
@@ -42,7 +43,7 @@ touch taskava-backend/taskava-data-access/src/main/resources/db/migration/V{numb
 
 ### Backend Module Structure
 
-The backend follows a multi-module Maven architecture where each module has a specific responsibility:
+The backend follows a multi-module Gradle architecture where each module has a specific responsibility:
 
 - **taskava-api-gateway**: REST controllers, API documentation, request/response handling. This is the only module that starts Spring Boot.
 - **taskava-core-service**: Business logic, service layer, orchestration. No direct database access.
@@ -134,10 +135,28 @@ All endpoints follow REST conventions:
 - Use database indexes on foreign keys and frequently queried columns
 - Lazy load associations by default
 
+## Gradle-Specific Tips
+
+### Performance Optimization
+- Enable build cache: `./gradlew build --build-cache`
+- Run specific module: `./gradlew :taskava-api-gateway:build`
+- Parallel execution: Already enabled in gradle.properties
+- Continuous build: `./gradlew build --continuous`
+
+### Useful Gradle Commands
+```bash
+./gradlew tasks                   # List all available tasks
+./gradlew dependencies            # Show dependency tree
+./gradlew dependencyInsight --dependency spring-boot  # Analyze specific dependency
+./gradlew clean build -x test     # Build without tests
+./gradlew bootJar                 # Create executable JAR
+./gradlew jibDockerBuild         # Build Docker image locally
+```
+
 ## Debugging Tips
 
 - Enable SQL logging: Set `logging.level.org.hibernate.SQL=DEBUG`
 - Check workspace context: Ensure `TenantContext` is set
-- Validate migrations: Run `./mvnw flyway:validate`
+- Validate migrations: Run `./gradlew :taskava-data-access:flywayValidate`
 - API testing: Swagger UI at `http://localhost:8080/api/swagger-ui.html`
 - Email testing: Mailhog UI at `http://localhost:8025`

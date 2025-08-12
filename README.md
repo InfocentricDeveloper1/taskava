@@ -8,7 +8,7 @@ Taskava is a privacy-focused, enterprise-ready project management platform desig
 
 #### Backend (Spring Boot)
 - **Framework**: Spring Boot 3.2.0 with Java 17
-- **Architecture**: Multi-module Maven project with clean architecture
+- **Architecture**: Multi-module Gradle project with clean architecture
 - **Database**: PostgreSQL with Flyway migrations
 - **Security**: JWT-based authentication with Spring Security
 - **API Documentation**: OpenAPI 3.0 with Swagger UI
@@ -81,7 +81,7 @@ taskava/
 - Node.js 18+
 - Docker & Docker Compose
 - PostgreSQL 15+ (or use Docker)
-- Maven 3.8+
+- Gradle 8.5+ (or use the included wrapper)
 
 ### Backend Setup
 
@@ -99,17 +99,17 @@ docker-compose up -d postgres redis localstack mailhog
 3. **Build the backend**
 ```bash
 cd taskava-backend
-mvn clean install
+./gradlew clean build
 ```
 
 4. **Run database migrations**
 ```bash
-mvn flyway:migrate -pl taskava-data-access
+./gradlew :taskava-data-access:flywayMigrate
 ```
 
 5. **Start the application**
 ```bash
-mvn spring-boot:run -pl taskava-api-gateway
+./gradlew bootRun
 ```
 
 The backend will be available at `http://localhost:8080`
@@ -218,9 +218,9 @@ Access the interactive API documentation at:
 ### Backend Testing
 ```bash
 cd taskava-backend
-mvn test                    # Unit tests
-mvn verify                  # Integration tests
-mvn test -Dtest=TestClass   # Specific test
+./gradlew test                    # Unit tests
+./gradlew integrationTest         # Integration tests
+./gradlew test --tests TestClass  # Specific test
 ```
 
 ### Frontend Testing

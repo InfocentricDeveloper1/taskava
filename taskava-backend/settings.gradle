@@ -1,0 +1,13 @@
+rootProject.name = 'taskava'
+
+include 'taskava-common'
+include 'taskava-data-access'
+include 'taskava-security'
+include 'taskava-core-service'
+include 'taskava-integration'
+include 'taskava-api-gateway'
+
+// Configure project names
+rootProject.children.each { project ->
+    project.buildFileName = "${project.name}.gradle"
+}

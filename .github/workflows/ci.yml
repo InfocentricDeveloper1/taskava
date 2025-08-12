@@ -33,12 +33,22 @@ jobs:
       with:
         java-version: '17'
         distribution: 'temurin'
-        cache: maven
+    
+    - name: Cache Gradle packages
+      uses: actions/cache@v3
+      with:
+        path: |
+          ~/.gradle/caches
+          ~/.gradle/wrapper
+        key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+        restore-keys: |
+          ${{ runner.os }}-gradle-
     
     - name: Run Backend Tests
       working-directory: ./taskava-backend
       run: |
-        mvn clean test
+        chmod +x gradlew
+        ./gradlew test
       env:
         DATABASE_URL: jdbc:postgresql://localhost:5432/taskava_test
         DATABASE_USERNAME: taskava
@@ -47,7 +57,7 @@ jobs:
     - name: Generate Test Report
       if: always()
       working-directory: ./taskava-backend
-      run: mvn surefire-report:report
+      run: ./gradlew testReport
     
     - name: Upload Test Results
       if: always()

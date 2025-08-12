@@ -1,0 +1,20 @@
+description = 'Taskava Common - Shared utilities, DTOs, and exceptions'
+
+dependencies {
+    // Spring Boot dependencies
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
+    implementation 'org.springframework.boot:spring-boot-starter-json'
+    
+    // Utilities
+    implementation 'org.apache.commons:commons-lang3'
+    implementation 'com.google.guava:guava'
+    
+    // MapStruct for DTO mapping
+    implementation 'org.mapstruct:mapstruct'
+    annotationProcessor 'org.mapstruct:mapstruct-processor'
+}
+
+// This module should be available to all other modules
+jar {
+    enabled = true
+}

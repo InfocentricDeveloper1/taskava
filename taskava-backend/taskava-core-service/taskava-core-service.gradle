@@ -1,0 +1,30 @@
+description = 'Taskava Core Service - Business logic and service layer'
+
+dependencies {
+    implementation project(':taskava-common')
+    implementation project(':taskava-data-access')
+    implementation project(':taskava-security')
+    
+    // Spring Boot
+    implementation 'org.springframework.boot:spring-boot-starter'
+    implementation 'org.springframework.boot:spring-boot-starter-cache'
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
+    
+    // Async processing
+    implementation 'org.springframework.boot:spring-boot-starter-amqp'
+    
+    // Caching
+    implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+    implementation 'com.github.ben-manes.caffeine:caffeine'
+    
+    // Event publishing
+    implementation 'org.springframework:spring-context'
+    
+    // MapStruct for DTO mapping
+    implementation 'org.mapstruct:mapstruct'
+    annotationProcessor 'org.mapstruct:mapstruct-processor'
+    
+    // Business logic utilities
+    implementation 'org.apache.commons:commons-lang3'
+    implementation 'com.google.guava:guava'
+}
