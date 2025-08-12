@@ -187,3 +187,44 @@ npm run build
 - Use custom hooks for logic reuse
 - Prefer composition over inheritance
 - Maintain consistent file naming (PascalCase for components)
+
+## ShadCN UI Development Rules (MANDATORY)
+
+### MCP Server Usage
+We use the ShadCN UI MCP server for ALL component development. The following tools are available in Claude Code:
+
+- `mcp__shadcn-ui__list_components` - List all available components
+- `mcp__shadcn-ui__get_component` - Get component source code
+- `mcp__shadcn-ui__get_component_demo` - Get usage examples
+- `mcp__shadcn-ui__get_component_metadata` - Get dependencies
+- `mcp__shadcn-ui__get_block` - Get pre-built blocks
+- `mcp__shadcn-ui__list_blocks` - List available blocks
+
+### Development Workflow
+1. **Before implementing ANY UI component**:
+   - Use `mcp__shadcn-ui__list_components` to see what's available
+   - Use `mcp__shadcn-ui__get_component_demo` to understand usage
+   - Use `mcp__shadcn-ui__get_component_metadata` for dependencies
+
+2. **Implementation Rules**:
+   - NEVER guess component props or structure
+   - ALWAYS follow the exact patterns from demos
+   - NEVER modify files in `/components/ui/` directly
+   - Use the `cn()` utility for conditional classes
+   - Install components via: `npx shadcn-ui@latest add [component-name]`
+
+3. **Common Patterns for Taskava**:
+   - **Task Cards**: Use Card with Header, Content, Footer composition
+   - **Forms**: Use Form + react-hook-form + Zod validation
+   - **Data Display**: Use Table/DataTable for lists, Card for items
+   - **Feedback**: Toast for success, Alert for errors, Dialog for confirmations
+   - **Navigation**: Command for search, Tabs for sections, Breadcrumb for hierarchy
+
+### Quality Standards
+- All components must be accessible (keyboard nav, ARIA labels)
+- All components must be responsive (mobile-first)
+- All components must have loading and error states
+- All forms must have proper validation
+- All lists must handle empty states
+
+See `/taskava-frontend/docs/design/shadcn-mcp-setup-guide.md` for detailed setup instructions.
