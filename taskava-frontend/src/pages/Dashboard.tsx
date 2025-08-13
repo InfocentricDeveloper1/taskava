@@ -8,13 +8,13 @@ import {
   AlertCircle,
   Calendar
 } from 'lucide-react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { projectApi, taskApi } from '@/services/api';
-import { Project, Task } from '@/types';
-import { useAuthStore } from '@/store/useAuthStore';
-import { useMockDataStore } from '@/store/useMockData';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
+import { Badge } from '../components/ui/badge';
+import { Button } from '../components/ui/button';
+import { projectApi, taskApi } from '../services/api';
+import { Project, Task } from '../types';
+import { useAuthStore } from '../store/useAuthStore';
+import { useMockDataStore } from '../store/useMockData';
 
 export function Dashboard() {
   const { currentWorkspace } = useAuthStore();

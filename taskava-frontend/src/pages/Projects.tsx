@@ -10,10 +10,10 @@ import {
   List,
   Search
 } from 'lucide-react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
+import { Badge } from '../components/ui/badge';
+import { Button } from '../components/ui/button';
+import { Input } from '../components/ui/input';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -21,11 +21,11 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { projectApi } from '@/services/api';
-import { Project } from '@/types';
-import { useAuthStore } from '@/store/useAuthStore';
-import { useMockDataStore } from '@/store/useMockData';
+} from '../components/ui/dropdown-menu';
+import { projectApi } from '../services/api';
+import { Project } from '../types';
+import { useAuthStore } from '../store/useAuthStore';
+import { useMockDataStore } from '../store/useMockData';
 import { useNavigate } from 'react-router-dom';
 
 export function Projects() {

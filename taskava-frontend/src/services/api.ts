@@ -8,7 +8,7 @@ import {
   User, 
   Workspace,
   TaskSection 
-} from '@/types';
+} from '../types';
 
 const API_BASE_URL = 'http://localhost:8080/api';
 

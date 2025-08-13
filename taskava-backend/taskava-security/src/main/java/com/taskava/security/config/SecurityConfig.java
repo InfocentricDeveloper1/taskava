@@ -1,6 +1,7 @@
 package com.taskava.security.config;
 
 import com.taskava.security.filter.JwtAuthenticationFilter;
+import com.taskava.security.filter.TenantFilter;
 import com.taskava.security.jwt.JwtAuthenticationEntryPoint;
 import com.taskava.security.service.CustomUserDetailsService;
 import lombok.RequiredArgsConstructor;
@@ -39,6 +40,7 @@ public class SecurityConfig {
     private final CustomUserDetailsService customUserDetailsService;
     private final JwtAuthenticationEntryPoint unauthorizedHandler;
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
+    private final TenantFilter tenantFilter;
     
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -96,6 +98,9 @@ public class SecurityConfig {
         // Add JWT filter before UsernamePasswordAuthenticationFilter
         http.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
         
+        // Add Tenant filter after JWT authentication filter
+        http.addFilterAfter(tenantFilter, JwtAuthenticationFilter.class);
+        
         return http.build();
     }
     
@@ -109,7 +114,7 @@ public class SecurityConfig {
         ));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("*"));
-        configuration.setExposedHeaders(Arrays.asList("Authorization", "Content-Type", "X-Total-Count"));
+        configuration.setExposedHeaders(Arrays.asList("Authorization", "Content-Type", "X-Total-Count", "X-Workspace-Id", "X-Organization-Id"));
         configuration.setAllowCredentials(true);
         configuration.setMaxAge(3600L);
         

@@ -1,6 +1,6 @@
 import { create } from 'zustand';
-import { User, Workspace } from '@/types';
-import { authApi, workspaceApi } from '@/services/api';
+import { User, Workspace } from '../types';
+import { authApi, workspaceApi } from '../services/api';
 import { useMockDataStore } from './useMockData';
 
 interface AuthState {

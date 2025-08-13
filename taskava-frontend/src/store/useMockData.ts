@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { Workspace, Project, Task, User } from '@/types';
+import { Workspace, Project, Task, User } from '../types';
 
 interface MockDataState {
   mockWorkspace: Workspace;

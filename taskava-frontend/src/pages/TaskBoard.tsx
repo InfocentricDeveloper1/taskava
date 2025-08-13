@@ -10,10 +10,10 @@ import {
   XCircle,
   Filter
 } from 'lucide-react';
-import { Card, CardContent, CardHeader } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Card, CardContent, CardHeader } from '../components/ui/card';
+import { Badge } from '../components/ui/badge';
+import { Button } from '../components/ui/button';
+import { Avatar, AvatarFallback, AvatarImage } from '../components/ui/avatar';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -21,11 +21,11 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { taskApi } from '@/services/api';
-import { Task, TaskStatus } from '@/types';
-import { useAuthStore } from '@/store/useAuthStore';
-import { useMockDataStore } from '@/store/useMockData';
+} from '../components/ui/dropdown-menu';
+import { taskApi } from '../services/api';
+import { Task, TaskStatus } from '../types';
+import { useAuthStore } from '../store/useAuthStore';
+import { useMockDataStore } from '../store/useMockData';
 
 interface Column {
   id: TaskStatus;
