@@ -18,6 +18,9 @@ public interface TeamRepository extends JpaRepository<Team, UUID> {
     @Query("SELECT t FROM Team t WHERE t.id = :id AND t.deleted = false")
     Optional<Team> findActiveById(@Param("id") UUID id);
 
+    @Query("SELECT t FROM Team t WHERE t.id = :id AND t.workspace.id = :workspaceId AND t.deleted = false")
+    Optional<Team> findActiveByIdAndWorkspace(@Param("id") UUID id, @Param("workspaceId") UUID workspaceId);
+
     @Query("SELECT t FROM Team t WHERE t.workspace.id = :workspaceId AND t.deleted = false")
     List<Team> findByWorkspaceId(@Param("workspaceId") UUID workspaceId);
 

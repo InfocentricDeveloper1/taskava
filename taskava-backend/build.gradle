@@ -104,14 +104,7 @@ task testReport(type: TestReport) {
     reportOn subprojects*.test
 }
 
-// Configure build cache
-if (hasProperty('buildCacheEnabled') && buildCacheEnabled.toBoolean()) {
-    buildCache {
-        local {
-            enabled = true
-        }
-    }
-}
+// Build cache is configured in settings.gradle
 
 // Wrapper configuration
 wrapper {

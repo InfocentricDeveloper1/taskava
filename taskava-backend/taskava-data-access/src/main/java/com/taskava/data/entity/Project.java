@@ -2,21 +2,28 @@ package com.taskava.data.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.Where;
+import org.hibernate.type.SqlTypes;
 
-import java.time.LocalDate;
+import java.time.Instant;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 
 @Entity
 @Table(name = "projects",
        indexes = {
            @Index(name = "idx_project_workspace", columnList = "workspace_id"),
-           @Index(name = "idx_project_owner", columnList = "owner_id"),
-           @Index(name = "idx_project_deleted", columnList = "is_deleted"),
-           @Index(name = "idx_project_status", columnList = "status")
+           @Index(name = "idx_project_team", columnList = "team_id"),
+           @Index(name = "idx_project_status", columnList = "status"),
+           @Index(name = "idx_project_deleted", columnList = "is_deleted")
+       },
+       uniqueConstraints = {
+           @UniqueConstraint(name = "uk_project_workspace_name", 
+                            columnNames = {"workspace_id", "name", "is_deleted"})
        })
 @Getter
 @Setter
@@ -26,54 +33,64 @@ import java.util.Set;
 @Where(clause = "is_deleted = false")
 public class Project extends BaseEntity {
 
-    @Column(name = "name", nullable = false)
+    @Column(name = "name", nullable = false, length = 255)
     private String name;
 
     @Column(name = "description", columnDefinition = "TEXT")
     private String description;
 
-    @Column(name = "color")
-    private String color;
+    @Column(name = "color", length = 7)
+    @Builder.Default
+    private String color = "#1e90ff";
 
-    @Column(name = "icon")
+    @Column(name = "icon", length = 50)
     private String icon;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "status", nullable = false)
+    @Column(name = "status", nullable = false, length = 50)
+    @Builder.Default
     private ProjectStatus status = ProjectStatus.ACTIVE;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "priority")
-    private Priority priority = Priority.MEDIUM;
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "status_update", columnDefinition = "jsonb")
+    private Map<String, Object> statusUpdate;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "default_view")
-    private ViewType defaultView = ViewType.LIST;
+    @Column(name = "privacy", nullable = false, length = 50)
+    @Builder.Default
+    private ProjectPrivacy privacy = ProjectPrivacy.TEAM_VISIBLE;
 
-    @Column(name = "start_date")
-    private LocalDate startDate;
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "settings", columnDefinition = "jsonb")
+    @Builder.Default
+    private Map<String, Object> settings = new HashMap<>();
 
-    @Column(name = "due_date")
-    private LocalDate dueDate;
-
-    @Column(name = "progress_percentage")
-    private Integer progressPercentage = 0;
+    @Column(name = "archived_at")
+    private Instant archivedAt;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "workspace_id", nullable = false)
     private Workspace workspace;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "owner_id")
-    private User owner;
-
-    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "team_id")
     private Team team;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "portfolio_id")
-    private Portfolio portfolio;
+    @OneToMany(mappedBy = "project", cascade = CascadeType.ALL, 
+               fetch = FetchType.LAZY, orphanRemoval = true)
+    @OrderBy("position ASC")
+    @Builder.Default
+    private Set<ProjectSection> sections = new HashSet<>();
+
+    // For future multi-homing support - tasks can belong to multiple projects
+    @ManyToMany
+    @JoinTable(
+        name = "task_projects",
+        joinColumns = @JoinColumn(name = "project_id"),
+        inverseJoinColumns = @JoinColumn(name = "task_id")
+    )
+    @Builder.Default
+    private Set<Task> tasks = new HashSet<>();
 
     @ManyToMany
     @JoinTable(
@@ -81,41 +98,86 @@ public class Project extends BaseEntity {
         joinColumns = @JoinColumn(name = "project_id"),
         inverseJoinColumns = @JoinColumn(name = "user_id")
     )
+    @Builder.Default
     private Set<User> members = new HashSet<>();
-
-    @OneToMany(mappedBy = "project", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private Set<Section> sections = new HashSet<>();
-
-    @ManyToMany(mappedBy = "projects")
-    private Set<Task> tasks = new HashSet<>();
-
-    @OneToMany(mappedBy = "project", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private Set<Milestone> milestones = new HashSet<>();
 
     @ManyToMany
     @JoinTable(
-        name = "project_tags",
+        name = "project_custom_fields",
         joinColumns = @JoinColumn(name = "project_id"),
-        inverseJoinColumns = @JoinColumn(name = "tag_id")
+        inverseJoinColumns = @JoinColumn(name = "custom_field_id")
     )
-    private Set<Tag> tags = new HashSet<>();
+    @Builder.Default
+    private Set<CustomField> customFields = new HashSet<>();
 
-    @ElementCollection
-    @CollectionTable(name = "project_custom_field_values",
-                    joinColumns = @JoinColumn(name = "project_id"))
-    @MapKeyJoinColumn(name = "custom_field_id")
-    @Column(name = "field_value", columnDefinition = "TEXT")
-    private Map<CustomField, String> customFieldValues = new HashMap<>();
+    @OneToMany(mappedBy = "project", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @Builder.Default
+    private Set<Form> forms = new HashSet<>();
+
+    @OneToMany(mappedBy = "project", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @Builder.Default
+    private Set<AutomationRule> automationRules = new HashSet<>();
 
     public enum ProjectStatus {
-        PLANNING, ACTIVE, ON_HOLD, COMPLETED, ARCHIVED, CANCELLED
+        ACTIVE,      // Project is actively being worked on
+        ARCHIVED,    // Project is archived but not deleted
+        COMPLETED    // Project is completed
     }
 
-    public enum Priority {
-        LOW, MEDIUM, HIGH, CRITICAL
+    public enum ProjectPrivacy {
+        TEAM_VISIBLE,        // Visible to team members only
+        WORKSPACE_VISIBLE,   // Visible to all workspace members
+        PUBLIC              // Public to everyone with link
     }
 
-    public enum ViewType {
-        LIST, BOARD, CALENDAR, TIMELINE, GANTT, TABLE, DASHBOARD
+    /**
+     * Archive this project
+     */
+    public void archive() {
+        this.status = ProjectStatus.ARCHIVED;
+        this.archivedAt = Instant.now();
+    }
+
+    /**
+     * Restore this project from archive
+     */
+    public void restore() {
+        this.status = ProjectStatus.ACTIVE;
+        this.archivedAt = null;
+    }
+
+    /**
+     * Mark project as completed
+     */
+    public void complete() {
+        this.status = ProjectStatus.COMPLETED;
+    }
+
+    /**
+     * Add a section to this project
+     */
+    public ProjectSection addSection(String name, Integer position) {
+        ProjectSection section = ProjectSection.builder()
+                .name(name)
+                .position(position != null ? position : sections.size())
+                .project(this)
+                .build();
+        sections.add(section);
+        return section;
+    }
+
+    /**
+     * Check if user is a member of this project
+     */
+    public boolean isMember(UUID userId) {
+        return members.stream()
+                .anyMatch(member -> member.getId().equals(userId));
+    }
+
+    /**
+     * Check if project is in workspace
+     */
+    public boolean isInWorkspace(UUID workspaceId) {
+        return workspace != null && workspace.getId().equals(workspaceId);
     }
 }

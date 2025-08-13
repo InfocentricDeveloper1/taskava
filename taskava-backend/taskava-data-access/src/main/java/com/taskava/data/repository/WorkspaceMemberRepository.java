@@ -44,4 +44,10 @@ public interface WorkspaceMemberRepository extends JpaRepository<WorkspaceMember
 
     @Query("SELECT wm FROM WorkspaceMember wm WHERE wm.workspace.organization.id = :organizationId AND wm.user.id = :userId AND wm.deleted = false AND wm.active = true")
     List<WorkspaceMember> findActiveByOrganizationIdAndUserId(@Param("organizationId") UUID organizationId, @Param("userId") UUID userId);
+
+    @Query("SELECT CASE WHEN COUNT(wm) > 0 THEN true ELSE false END FROM WorkspaceMember wm WHERE wm.workspace.id = :workspaceId AND wm.user.id = :userId AND wm.canCreateProjects = true AND wm.deleted = false AND wm.active = true")
+    boolean canCreateProjects(@Param("workspaceId") UUID workspaceId, @Param("userId") UUID userId);
+
+    @Query("SELECT CASE WHEN COUNT(wm) > 0 THEN true ELSE false END FROM WorkspaceMember wm WHERE wm.workspace.id = :workspaceId AND wm.user.id = :userId AND wm.role = 'ADMIN' AND wm.deleted = false AND wm.active = true")
+    boolean isAdmin(@Param("workspaceId") UUID workspaceId, @Param("userId") UUID userId);
 }

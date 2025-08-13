@@ -77,9 +77,8 @@ public class Task extends BaseEntity {
     )
     private Set<Project> projects = new HashSet<>();
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "section_id")
-    private Section section;
+    // Section is handled through TaskProject relationship for multi-homing
+    // Each task can be in different sections in different projects
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "assignee_id")
