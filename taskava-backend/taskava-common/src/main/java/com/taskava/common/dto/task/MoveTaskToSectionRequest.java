@@ -1,0 +1,23 @@
+package com.taskava.common.dto.task;
+
+import jakarta.validation.constraints.NotNull;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import java.util.UUID;
+
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+public class MoveTaskToSectionRequest {
+    
+    @NotNull(message = "Project ID is required")
+    private UUID projectId;
+    
+    private UUID sectionId; // null means move to "no section"
+    
+    private Integer position;
+}

@@ -42,7 +42,12 @@ public class UpdateTaskRequest {
     private Set<UUID> followerIds;
     private Set<UUID> tagIds;
     
-    private Map<UUID, String> customFieldValues;
+    private Map<UUID, Object> customFieldValues; // Support different value types
     
     private TaskDTO.RecurrenceSettingsDTO recurrenceSettings;
+    
+    private String taskType; // task, milestone, approval
+    
+    private Boolean clearAssignee; // Set to true to remove assignee
+    private Boolean clearDueDate; // Set to true to remove due date
 }

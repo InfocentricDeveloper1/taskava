@@ -35,7 +35,10 @@ public class CreateTaskRequest {
     private UUID assigneeId;
     private UUID parentTaskId;
     
+    @Builder.Default
     private String status = "TODO";
+    
+    @Builder.Default
     private String priority = "MEDIUM";
     
     private LocalDate startDate;
@@ -48,11 +51,14 @@ public class CreateTaskRequest {
     private Set<UUID> tagIds;
     private Set<UUID> dependencyIds;
     
-    private Map<UUID, String> customFieldValues;
+    private Map<UUID, Object> customFieldValues; // Support different value types
     
     private TaskDTO.RecurrenceSettingsDTO recurrenceSettings;
     
     private List<CreateSubtaskRequest> subtasks;
+    
+    @Builder.Default
+    private String taskType = "task"; // task, milestone, approval
     
     @Data
     @Builder
@@ -63,7 +69,8 @@ public class CreateTaskRequest {
         private String title;
         private String description;
         private UUID assigneeId;
-        private String priority;
+        @Builder.Default
+        private String priority = "MEDIUM";
         private LocalDate dueDate;
     }
 }
