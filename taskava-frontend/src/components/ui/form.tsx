@@ -5,9 +5,11 @@ import {
   Controller,
   FormProvider,
   useFormContext,
-  type ControllerProps,
-  type FieldPath,
-  type FieldValues,
+} from "react-hook-form"
+import type {
+  ControllerProps,
+  FieldPath,
+  FieldValues,
 } from "react-hook-form"
 
 import { cn } from "@/lib/utils"
@@ -145,7 +147,7 @@ const FormMessage = React.forwardRef<
   React.HTMLAttributes<HTMLParagraphElement>
 >(({ className, children, ...props }, ref) => {
   const { error, formMessageId } = useFormField()
-  const body = error ? String(error?.message ?? "") : children
+  const body = error ? String(error?.message) : children
 
   if (!body) {
     return null

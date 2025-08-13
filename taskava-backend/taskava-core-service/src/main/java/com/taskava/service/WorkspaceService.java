@@ -177,8 +177,9 @@ public class WorkspaceService {
             throw new IllegalArgumentException("User must be a member of the organization first");
         }
         
+        final UUID userIdFinal = userId;
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("User not found: " + userId));
+                .orElseThrow(() -> new IllegalArgumentException("User not found: " + userIdFinal));
         
         WorkspaceMember membership = WorkspaceMember.builder()
                 .workspace(workspace)

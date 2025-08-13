@@ -61,7 +61,7 @@ public class TaskServiceImpl implements TaskService {
     @Transactional(readOnly = true)
     public TaskDTO getTaskById(UUID id) {
         log.debug("Getting task by id: {}", id);
-        Task task = taskRepository.findByIdAndIsDeletedFalse(id)
+        Task task = taskRepository.findByIdAndDeletedFalse(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Task", "id", id));
         return taskMapper.toDTO(task);
     }
@@ -172,7 +172,7 @@ public class TaskServiceImpl implements TaskService {
     public TaskDTO updateTask(UUID id, UpdateTaskRequest request) {
         log.info("Updating task: {}", id);
         
-        Task task = taskRepository.findByIdAndIsDeletedFalse(id)
+        Task task = taskRepository.findByIdAndDeletedFalse(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Task", "id", id));
         
         // Update basic fields
@@ -248,7 +248,7 @@ public class TaskServiceImpl implements TaskService {
     public void deleteTask(UUID id) {
         log.info("Deleting task: {}", id);
         
-        Task task = taskRepository.findByIdAndIsDeletedFalse(id)
+        Task task = taskRepository.findByIdAndDeletedFalse(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Task", "id", id));
         
         // Soft delete
@@ -261,7 +261,7 @@ public class TaskServiceImpl implements TaskService {
     public TaskDTO completeTask(UUID id) {
         log.info("Completing task: {}", id);
         
-        Task task = taskRepository.findByIdAndIsDeletedFalse(id)
+        Task task = taskRepository.findByIdAndDeletedFalse(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Task", "id", id));
         
         task.setStatus(TaskStatus.COMPLETED);
@@ -276,7 +276,7 @@ public class TaskServiceImpl implements TaskService {
     public TaskDTO uncompleteTask(UUID id) {
         log.info("Uncompleting task: {}", id);
         
-        Task task = taskRepository.findByIdAndIsDeletedFalse(id)
+        Task task = taskRepository.findByIdAndDeletedFalse(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Task", "id", id));
         
         task.setStatus(TaskStatus.TODO);
@@ -315,7 +315,7 @@ public class TaskServiceImpl implements TaskService {
     public TaskDTO assignTask(UUID taskId, UUID userId) {
         log.info("Assigning task {} to user {}", taskId, userId);
         
-        Task task = taskRepository.findByIdAndIsDeletedFalse(taskId)
+        Task task = taskRepository.findByIdAndDeletedFalse(taskId)
                 .orElseThrow(() -> new ResourceNotFoundException("Task", "id", taskId));
         
         User user = userRepository.findById(userId)
@@ -338,7 +338,7 @@ public class TaskServiceImpl implements TaskService {
     public TaskDTO removeAssignee(UUID taskId, UUID userId) {
         log.info("Removing assignee {} from task {}", userId, taskId);
         
-        Task task = taskRepository.findByIdAndIsDeletedFalse(taskId)
+        Task task = taskRepository.findByIdAndDeletedFalse(taskId)
                 .orElseThrow(() -> new ResourceNotFoundException("Task", "id", taskId));
         
         if (task.getAssignee() != null && task.getAssignee().getId().equals(userId)) {
@@ -355,7 +355,7 @@ public class TaskServiceImpl implements TaskService {
     public List<TaskAssigneeDTO> getAssignees(UUID taskId) {
         log.debug("Getting assignees for task: {}", taskId);
         
-        Task task = taskRepository.findByIdAndIsDeletedFalse(taskId)
+        Task task = taskRepository.findByIdAndDeletedFalse(taskId)
                 .orElseThrow(() -> new ResourceNotFoundException("Task", "id", taskId));
         
         List<TaskAssigneeDTO> assignees = new ArrayList<>();
@@ -377,12 +377,12 @@ public class TaskServiceImpl implements TaskService {
     public TaskDTO addTaskToProject(UUID taskId, UUID projectId) {
         log.info("Adding task {} to project {}", taskId, projectId);
         
-        Task task = taskRepository.findByIdAndIsDeletedFalse(taskId)
+        Task task = taskRepository.findByIdAndDeletedFalse(taskId)
                 .orElseThrow(() -> new ResourceNotFoundException("Task", "id", taskId));
         
         addTaskToProjectInternal(task, projectId, null);
         
-        task = taskRepository.findByIdAndIsDeletedFalse(taskId)
+        task = taskRepository.findByIdAndDeletedFalse(taskId)
                 .orElseThrow(() -> new ResourceNotFoundException("Task", "id", taskId));
         
         log.info("Task added to project successfully");
@@ -393,12 +393,12 @@ public class TaskServiceImpl implements TaskService {
     public TaskDTO addToProject(UUID taskId, AddTaskToProjectRequest request) {
         log.info("Adding task {} to project {} with section {}", taskId, request.getProjectId(), request.getSectionId());
         
-        Task task = taskRepository.findByIdAndIsDeletedFalse(taskId)
+        Task task = taskRepository.findByIdAndDeletedFalse(taskId)
                 .orElseThrow(() -> new ResourceNotFoundException("Task", "id", taskId));
         
         addTaskToProjectInternal(task, request.getProjectId(), request.getSectionId());
         
-        task = taskRepository.findByIdAndIsDeletedFalse(taskId)
+        task = taskRepository.findByIdAndDeletedFalse(taskId)
                 .orElseThrow(() -> new ResourceNotFoundException("Task", "id", taskId));
         
         log.info("Task added to project successfully");
@@ -409,12 +409,12 @@ public class TaskServiceImpl implements TaskService {
     public TaskDTO removeFromProject(UUID taskId, UUID projectId) {
         log.info("Removing task {} from project {}", taskId, projectId);
         
-        Task task = taskRepository.findByIdAndIsDeletedFalse(taskId)
+        Task task = taskRepository.findByIdAndDeletedFalse(taskId)
                 .orElseThrow(() -> new ResourceNotFoundException("Task", "id", taskId));
         
         taskProjectRepository.deleteByTaskIdAndProjectId(taskId, projectId);
         
-        task = taskRepository.findByIdAndIsDeletedFalse(taskId)
+        task = taskRepository.findByIdAndDeletedFalse(taskId)
                 .orElseThrow(() -> new ResourceNotFoundException("Task", "id", taskId));
         
         log.info("Task removed from project successfully");
@@ -447,7 +447,7 @@ public class TaskServiceImpl implements TaskService {
         
         taskProjectRepository.save(taskProject);
         
-        Task task = taskRepository.findByIdAndIsDeletedFalse(taskId)
+        Task task = taskRepository.findByIdAndDeletedFalse(taskId)
                 .orElseThrow(() -> new ResourceNotFoundException("Task", "id", taskId));
         
         log.info("Task moved to section successfully");
@@ -458,7 +458,7 @@ public class TaskServiceImpl implements TaskService {
     public TaskDTO createSubtask(UUID parentTaskId, CreateSubtaskRequest request) {
         log.info("Creating subtask for task: {}", parentTaskId);
         
-        Task parentTask = taskRepository.findByIdAndIsDeletedFalse(parentTaskId)
+        Task parentTask = taskRepository.findByIdAndDeletedFalse(parentTaskId)
                 .orElseThrow(() -> new ResourceNotFoundException("Parent task", "id", parentTaskId));
         
         CreateTaskRequest.CreateSubtaskRequest subtaskRequest = CreateTaskRequest.CreateSubtaskRequest.builder()
@@ -476,6 +476,27 @@ public class TaskServiceImpl implements TaskService {
     }
 
     @Override
+    public TaskDTO createSubtask(UUID parentTaskId, CreateTaskRequest request) {
+        log.info("Creating subtask for parent task: {}", parentTaskId);
+        
+        Task parentTask = taskRepository.findByIdAndDeletedFalse(parentTaskId)
+                .orElseThrow(() -> new ResourceNotFoundException("Parent task", "id", parentTaskId));
+        
+        // Convert CreateTaskRequest to CreateSubtaskRequest
+        CreateTaskRequest.CreateSubtaskRequest subtaskRequest = CreateTaskRequest.CreateSubtaskRequest.builder()
+                .title(request.getTitle())
+                .description(request.getDescription())
+                .priority(request.getPriority())
+                .dueDate(request.getDueDate())
+                .build();
+        
+        Task subtask = createSubtaskInternal(parentTask, subtaskRequest);
+        
+        log.info("Subtask created successfully with id: {}", subtask.getId());
+        return taskMapper.toDTO(subtask);
+    }
+    
+    @Override
     @Transactional(readOnly = true)
     public List<TaskDTO> getSubtasks(UUID parentTaskId) {
         log.debug("Getting subtasks for task: {}", parentTaskId);
@@ -488,7 +509,7 @@ public class TaskServiceImpl implements TaskService {
     public TaskDTO promoteSubtaskToTask(UUID subtaskId) {
         log.info("Promoting subtask {} to task", subtaskId);
         
-        Task subtask = taskRepository.findByIdAndIsDeletedFalse(subtaskId)
+        Task subtask = taskRepository.findByIdAndDeletedFalse(subtaskId)
                 .orElseThrow(() -> new ResourceNotFoundException("Subtask", "id", subtaskId));
         
         if (subtask.getParentTask() == null) {
@@ -506,10 +527,10 @@ public class TaskServiceImpl implements TaskService {
     public TaskDependencyDTO addDependency(UUID taskId, AddTaskDependencyRequest request) {
         log.info("Adding dependency from task {} to task {}", request.getPredecessorId(), taskId);
         
-        Task task = taskRepository.findByIdAndIsDeletedFalse(taskId)
+        Task task = taskRepository.findByIdAndDeletedFalse(taskId)
                 .orElseThrow(() -> new ResourceNotFoundException("Task", "id", taskId));
         
-        Task predecessor = taskRepository.findByIdAndIsDeletedFalse(request.getPredecessorId())
+        Task predecessor = taskRepository.findByIdAndDeletedFalse(request.getPredecessorId())
                 .orElseThrow(() -> new ResourceNotFoundException("Predecessor task", "id", request.getPredecessorId()));
         
         // Check for circular dependency
@@ -543,7 +564,7 @@ public class TaskServiceImpl implements TaskService {
                 .build();
         addDependency(taskId, request);
         
-        Task task = taskRepository.findByIdAndIsDeletedFalse(taskId)
+        Task task = taskRepository.findByIdAndDeletedFalse(taskId)
                 .orElseThrow(() -> new ResourceNotFoundException("Task", "id", taskId));
         return taskMapper.toDTO(task);
     }
@@ -552,7 +573,7 @@ public class TaskServiceImpl implements TaskService {
     public void removeDependency(UUID taskId, UUID dependsOnTaskId) {
         log.info("Removing dependency from task {} to task {}", taskId, dependsOnTaskId);
         
-        Task task = taskRepository.findByIdAndIsDeletedFalse(taskId)
+        Task task = taskRepository.findByIdAndDeletedFalse(taskId)
                 .orElseThrow(() -> new ResourceNotFoundException("Task", "id", taskId));
         
         task.getDependencies().removeIf(dep -> dep.getId().equals(dependsOnTaskId));
@@ -566,7 +587,7 @@ public class TaskServiceImpl implements TaskService {
     public List<TaskDependencyDTO> getDependencies(UUID taskId) {
         log.debug("Getting dependencies for task: {}", taskId);
         
-        Task task = taskRepository.findByIdAndIsDeletedFalse(taskId)
+        Task task = taskRepository.findByIdAndDeletedFalse(taskId)
                 .orElseThrow(() -> new ResourceNotFoundException("Task", "id", taskId));
         
         return task.getDependencies().stream()
@@ -585,7 +606,7 @@ public class TaskServiceImpl implements TaskService {
     public TaskDTO updateCustomField(UUID taskId, UUID fieldId, UpdateCustomFieldValueRequest request) {
         log.info("Updating custom field {} for task {}", fieldId, taskId);
         
-        Task task = taskRepository.findByIdAndIsDeletedFalse(taskId)
+        Task task = taskRepository.findByIdAndDeletedFalse(taskId)
                 .orElseThrow(() -> new ResourceNotFoundException("Task", "id", taskId));
         
         // Custom field implementation would go here
@@ -599,7 +620,7 @@ public class TaskServiceImpl implements TaskService {
     public TaskDTO duplicateTask(UUID taskId, DuplicateTaskRequest request) {
         log.info("Duplicating task: {}", taskId);
         
-        Task originalTask = taskRepository.findByIdAndIsDeletedFalse(taskId)
+        Task originalTask = taskRepository.findByIdAndDeletedFalse(taskId)
                 .orElseThrow(() -> new ResourceNotFoundException("Task", "id", taskId));
         
         // Generate new task number
@@ -708,7 +729,7 @@ public class TaskServiceImpl implements TaskService {
     public CommentDTO addComment(UUID taskId, CreateCommentRequest request) {
         log.info("Adding comment to task: {}", taskId);
         
-        Task task = taskRepository.findByIdAndIsDeletedFalse(taskId)
+        Task task = taskRepository.findByIdAndDeletedFalse(taskId)
                 .orElseThrow(() -> new ResourceNotFoundException("Task", "id", taskId));
         
         // Comment implementation would go here
@@ -744,7 +765,7 @@ public class TaskServiceImpl implements TaskService {
     public TaskDTO updateTaskStatus(UUID taskId, String status) {
         log.info("Updating task {} status to {}", taskId, status);
         
-        Task task = taskRepository.findByIdAndIsDeletedFalse(taskId)
+        Task task = taskRepository.findByIdAndDeletedFalse(taskId)
                 .orElseThrow(() -> new ResourceNotFoundException("Task", "id", taskId));
         
         TaskStatus newStatus = TaskStatus.valueOf(status.toUpperCase());

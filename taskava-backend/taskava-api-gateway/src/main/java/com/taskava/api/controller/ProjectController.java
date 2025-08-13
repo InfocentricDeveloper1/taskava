@@ -26,7 +26,7 @@ import java.util.UUID;
 
 @Slf4j
 @RestController
-@RequestMapping("/api/v1/projects")
+@RequestMapping("/v1/projects")
 @RequiredArgsConstructor
 @Tag(name = "Projects", description = "Project management endpoints")
 @SecurityRequirement(name = "bearerAuth")

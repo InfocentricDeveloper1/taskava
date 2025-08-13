@@ -7,7 +7,9 @@ import com.taskava.security.context.TenantContext;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -53,7 +55,8 @@ public class ProjectService {
         log.info("Fetching recent projects for user {} in workspace {}", userId, workspaceId);
         
         // TODO: Implement actual recent project tracking based on user access logs
-        List<Project> projects = projectRepository.findRecentByUserAndWorkspace(userId, workspaceId, limit);
+        List<Project> projects = projectRepository.findRecentByUserAndWorkspace(userId, workspaceId, 
+                PageRequest.of(0, limit, Sort.by(Sort.Direction.DESC, "updatedAt")));
         
         return projects.stream()
                 .map(this::mapToDTO)

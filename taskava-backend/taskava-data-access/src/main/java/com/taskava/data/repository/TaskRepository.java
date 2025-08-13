@@ -22,31 +22,31 @@ import java.util.UUID;
 public interface TaskRepository extends JpaRepository<Task, UUID> {
     
     @Modifying
-    @Query("UPDATE Task t SET t.isDeleted = true WHERE t.id = :id")
+    @Query("UPDATE Task t SET t.deleted = true WHERE t.id = :id")
     void softDeleteById(@Param("id") UUID id);
     
     @EntityGraph(attributePaths = {"assignee", "createdByUser", "projects", "tags", "followers"})
-    Optional<Task> findByIdAndIsDeletedFalse(UUID id);
+    Optional<Task> findByIdAndDeletedFalse(UUID id);
     
-    @Query("SELECT DISTINCT t FROM Task t JOIN t.projects p WHERE p.workspace.id = :workspaceId AND t.isDeleted = false")
+    @Query("SELECT DISTINCT t FROM Task t JOIN t.projects p WHERE p.workspace.id = :workspaceId AND t.deleted = false")
     Page<Task> findByWorkspaceId(@Param("workspaceId") UUID workspaceId, Pageable pageable);
     
-    @Query("SELECT t FROM Task t JOIN t.projects p WHERE p.id = :projectId AND t.isDeleted = false")
+    @Query("SELECT t FROM Task t JOIN t.projects p WHERE p.id = :projectId AND t.deleted = false")
     Page<Task> findByProjectId(@Param("projectId") UUID projectId, Pageable pageable);
     
-    @Query("SELECT t FROM Task t WHERE t.assignee.id = :assigneeId AND t.isDeleted = false")
+    @Query("SELECT t FROM Task t WHERE t.assignee.id = :assigneeId AND t.deleted = false")
     Page<Task> findByAssigneeId(@Param("assigneeId") UUID assigneeId, Pageable pageable);
     
-    @Query("SELECT t FROM Task t WHERE t.status = :status AND t.isDeleted = false")
+    @Query("SELECT t FROM Task t WHERE t.status = :status AND t.deleted = false")
     Page<Task> findByStatus(@Param("status") TaskStatus status, Pageable pageable);
     
-    @Query("SELECT t FROM Task t WHERE t.parentTask.id = :parentTaskId AND t.isDeleted = false ORDER BY t.taskNumber")
+    @Query("SELECT t FROM Task t WHERE t.parentTask.id = :parentTaskId AND t.deleted = false ORDER BY t.taskNumber")
     List<Task> findSubtasksByParentTaskId(@Param("parentTaskId") UUID parentTaskId);
     
-    @Query("SELECT t FROM Task t JOIN t.dependencies d WHERE d.id = :taskId AND t.isDeleted = false")
+    @Query("SELECT t FROM Task t JOIN t.dependencies d WHERE d.id = :taskId AND t.deleted = false")
     List<Task> findDependentTasks(@Param("taskId") UUID taskId);
     
-    @Query("SELECT t FROM Task t JOIN t.dependents d WHERE d.id = :taskId AND t.isDeleted = false")
+    @Query("SELECT t FROM Task t JOIN t.dependents d WHERE d.id = :taskId AND t.deleted = false")
     List<Task> findDependencies(@Param("taskId") UUID taskId);
     
     @Query("SELECT MAX(t.taskNumber) FROM Task t JOIN t.projects p WHERE p.workspace.id = :workspaceId")
@@ -64,7 +64,7 @@ public interface TaskRepository extends JpaRepository<Task, UUID> {
         AND (:dueDateTo IS NULL OR t.dueDate <= :dueDateTo)
         AND (:search IS NULL OR LOWER(t.title) LIKE LOWER(CONCAT('%', :search, '%')) 
              OR LOWER(t.description) LIKE LOWER(CONCAT('%', :search, '%')))
-        AND t.isDeleted = false
+        AND t.deleted = false
     """)
     Page<Task> findWithFilters(
         @Param("projectId") UUID projectId,
@@ -82,7 +82,7 @@ public interface TaskRepository extends JpaRepository<Task, UUID> {
     @Query("""
         SELECT t FROM Task t 
         JOIN t.followers f 
-        WHERE f.id = :userId AND t.isDeleted = false
+        WHERE f.id = :userId AND t.deleted = false
     """)
     Page<Task> findTasksFollowedByUser(@Param("userId") UUID userId, Pageable pageable);
     
@@ -91,7 +91,7 @@ public interface TaskRepository extends JpaRepository<Task, UUID> {
         WHERE t.dueDate = :date 
         AND t.status != 'COMPLETED' 
         AND t.status != 'CANCELLED'
-        AND t.isDeleted = false
+        AND t.deleted = false
     """)
     List<Task> findTasksDueOn(@Param("date") LocalDate date);
     
@@ -100,12 +100,12 @@ public interface TaskRepository extends JpaRepository<Task, UUID> {
         WHERE t.dueDate < :date 
         AND t.status != 'COMPLETED' 
         AND t.status != 'CANCELLED'
-        AND t.isDeleted = false
+        AND t.deleted = false
     """)
     List<Task> findOverdueTasks(@Param("date") LocalDate date);
     
     @Modifying
-    @Query("UPDATE Task t SET t.isDeleted = true, t.deletedAt = CURRENT_TIMESTAMP WHERE t.id = :id")
+    @Query("UPDATE Task t SET t.deleted = true, t.deletedAt = CURRENT_TIMESTAMP WHERE t.id = :id")
     void softDelete(@Param("id") UUID id);
     
     @Modifying

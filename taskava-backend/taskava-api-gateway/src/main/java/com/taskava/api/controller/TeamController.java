@@ -23,7 +23,7 @@ import java.util.UUID;
 
 @Slf4j
 @RestController
-@RequestMapping("/api/v1")
+@RequestMapping("/v1")
 @RequiredArgsConstructor
 @Tag(name = "Teams", description = "Team management endpoints")
 @SecurityRequirement(name = "bearerAuth")

@@ -31,6 +31,13 @@ public class TenantContext {
     }
     
     /**
+     * Get the current workspace ID for this thread (alias for getCurrentWorkspace)
+     */
+    public static UUID getCurrentWorkspaceId() {
+        return currentWorkspace.get();
+    }
+    
+    /**
      * Set the current organization ID for this thread
      */
     public static void setCurrentOrganization(UUID organizationId) {
@@ -57,6 +64,13 @@ public class TenantContext {
      * Get the current user ID for this thread
      */
     public static UUID getCurrentUser() {
+        return currentUser.get();
+    }
+    
+    /**
+     * Get the current user ID for this thread (alias for getCurrentUser)
+     */
+    public static UUID getCurrentUserId() {
         return currentUser.get();
     }
     

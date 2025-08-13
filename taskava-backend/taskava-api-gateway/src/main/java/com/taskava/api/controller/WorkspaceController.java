@@ -27,7 +27,7 @@ import java.util.UUID;
 
 @Slf4j
 @RestController
-@RequestMapping("/api/v1/workspaces")
+@RequestMapping("/v1/workspaces")
 @RequiredArgsConstructor
 @Tag(name = "Workspaces", description = "Workspace management endpoints")
 @SecurityRequirement(name = "bearerAuth")

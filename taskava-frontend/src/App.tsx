@@ -1,6 +1,9 @@
 import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { TestStyling } from './TestStyling';
 import { TasksDemo } from './pages/TasksDemo';
+import { KanbanView } from './components/tasks/KanbanView';
 import { Button } from './components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from './components/ui/card';
 import { Badge } from './components/ui/badge';
@@ -17,9 +20,19 @@ import {
 import { FolderKanban, CheckSquare, Users, Calendar, Settings, Search, Plus, LogOut, User, MoreVertical } from 'lucide-react';
 import { cn } from './lib/utils';
 
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 1000 * 60 * 5, // 5 minutes
+      refetchOnWindowFocus: false,
+    },
+  },
+});
+
 function App() {
   return (
-    <Router>
+    <QueryClientProvider client={queryClient}>
+      <Router>
       <div className="min-h-screen bg-background">
         {/* Header */}
         <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -107,6 +120,8 @@ function App() {
         </main>
       </div>
     </Router>
+    <ReactQueryDevtools initialIsOpen={false} />
+  </QueryClientProvider>
   );
 }
 
@@ -265,118 +280,7 @@ function Projects() {
 }
 
 function Tasks() {
-  const taskColumns = {
-    todo: [
-      { id: 1, title: 'Design landing page', priority: 'High', assignee: 'JD' },
-      { id: 2, title: 'Set up database', priority: 'Medium', assignee: 'AK' },
-    ],
-    inProgress: [
-      { id: 3, title: 'Implement authentication', priority: 'High', assignee: 'SM' },
-      { id: 4, title: 'Create API endpoints', priority: 'Medium', assignee: 'JD' },
-    ],
-    done: [
-      { id: 5, title: 'Project setup', priority: 'Low', assignee: 'AK' },
-      { id: 6, title: 'Design system', priority: 'High', assignee: 'SM' },
-    ],
-  };
-
-  const priorityColors = {
-    High: 'destructive',
-    Medium: 'default',
-    Low: 'secondary',
-  } as const;
-
-  return (
-    <div className="space-y-8">
-      <div>
-        <h2 className="text-3xl font-bold tracking-tight">Task Board</h2>
-        <p className="text-muted-foreground">Manage tasks across your projects</p>
-      </div>
-      
-      <div className="grid gap-4 md:grid-cols-3">
-        {/* To Do Column */}
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h3 className="font-semibold">To Do</h3>
-            <Badge variant="outline">{taskColumns.todo.length}</Badge>
-          </div>
-          <div className="space-y-2">
-            {taskColumns.todo.map((task) => (
-              <Card key={task.id} className="cursor-pointer hover:shadow-md transition-shadow">
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-sm">{task.title}</CardTitle>
-                </CardHeader>
-                <CardContent className="pb-3">
-                  <div className="flex items-center justify-between">
-                    <Badge variant={priorityColors[task.priority as keyof typeof priorityColors]}>
-                      {task.priority}
-                    </Badge>
-                    <Avatar className="h-6 w-6">
-                      <AvatarFallback className="text-xs">{task.assignee}</AvatarFallback>
-                    </Avatar>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </div>
-
-        {/* In Progress Column */}
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h3 className="font-semibold">In Progress</h3>
-            <Badge variant="outline">{taskColumns.inProgress.length}</Badge>
-          </div>
-          <div className="space-y-2">
-            {taskColumns.inProgress.map((task) => (
-              <Card key={task.id} className="cursor-pointer hover:shadow-md transition-shadow">
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-sm">{task.title}</CardTitle>
-                </CardHeader>
-                <CardContent className="pb-3">
-                  <div className="flex items-center justify-between">
-                    <Badge variant={priorityColors[task.priority as keyof typeof priorityColors]}>
-                      {task.priority}
-                    </Badge>
-                    <Avatar className="h-6 w-6">
-                      <AvatarFallback className="text-xs">{task.assignee}</AvatarFallback>
-                    </Avatar>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </div>
-
-        {/* Done Column */}
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h3 className="font-semibold">Done</h3>
-            <Badge variant="outline">{taskColumns.done.length}</Badge>
-          </div>
-          <div className="space-y-2">
-            {taskColumns.done.map((task) => (
-              <Card key={task.id} className="cursor-pointer hover:shadow-md transition-shadow opacity-60">
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-sm line-through">{task.title}</CardTitle>
-                </CardHeader>
-                <CardContent className="pb-3">
-                  <div className="flex items-center justify-between">
-                    <Badge variant={priorityColors[task.priority as keyof typeof priorityColors]}>
-                      {task.priority}
-                    </Badge>
-                    <Avatar className="h-6 w-6">
-                      <AvatarFallback className="text-xs">{task.assignee}</AvatarFallback>
-                    </Avatar>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </div>
-      </div>
-    </div>
-  );
+  return <KanbanView />;
 }
 
 export default App;

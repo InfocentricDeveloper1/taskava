@@ -1,5 +1,7 @@
 package com.taskava.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.taskava.common.dto.CustomFieldDTO;
 import com.taskava.data.entity.CustomField;
 import com.taskava.data.entity.Workspace;
@@ -24,6 +26,7 @@ public class CustomFieldService {
 
     private final CustomFieldRepository customFieldRepository;
     private final WorkspaceRepository workspaceRepository;
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     @PreAuthorize("@workspaceService.canViewWorkspace(#workspaceId, authentication.principal.id)")
     @Transactional(readOnly = true)
@@ -73,7 +76,7 @@ public class CustomFieldService {
                 .defaultValue(fieldDto.getDefaultValue())
                 .options(fieldDto.getOptions() != null ? String.join(",", fieldDto.getOptions()) : null)
                 .validationRules(fieldDto.getValidationRules() != null ? 
-                        new com.fasterxml.jackson.databind.ObjectMapper().writeValueAsString(fieldDto.getValidationRules()) : null)
+                        convertToJson(fieldDto.getValidationRules()) : null)
                 .workspace(workspace)
                 .displayOrder(fieldDto.getDisplayOrder() != null ? fieldDto.getDisplayOrder() : 
                         customFieldRepository.getMaxDisplayOrder(fieldDto.getWorkspaceId()) + 1)
@@ -105,13 +108,7 @@ public class CustomFieldService {
             customField.setOptions(String.join(",", fieldDto.getOptions()));
         }
         if (fieldDto.getValidationRules() != null) {
-            try {
-                customField.setValidationRules(
-                    new com.fasterxml.jackson.databind.ObjectMapper()
-                        .writeValueAsString(fieldDto.getValidationRules()));
-            } catch (Exception e) {
-                log.error("Failed to serialize validation rules", e);
-            }
+            customField.setValidationRules(convertToJson(fieldDto.getValidationRules()));
         }
         if (fieldDto.getDisplayOrder() != null) {
             customField.setDisplayOrder(fieldDto.getDisplayOrder());
@@ -144,8 +141,7 @@ public class CustomFieldService {
         java.util.Map<String, Object> validationRules = null;
         if (field.getValidationRules() != null && !field.getValidationRules().isEmpty()) {
             try {
-                validationRules = new com.fasterxml.jackson.databind.ObjectMapper()
-                        .readValue(field.getValidationRules(), java.util.Map.class);
+                validationRules = objectMapper.readValue(field.getValidationRules(), java.util.Map.class);
             } catch (Exception e) {
                 log.error("Failed to deserialize validation rules", e);
             }
@@ -177,5 +173,15 @@ public class CustomFieldService {
         return name.toLowerCase()
                 .replaceAll("[^a-z0-9]+", "_")
                 .replaceAll("^_|_$", "");
+    }
+    
+    private String convertToJson(Object obj) {
+        if (obj == null) return null;
+        try {
+            return objectMapper.writeValueAsString(obj);
+        } catch (JsonProcessingException e) {
+            log.error("Failed to convert object to JSON: {}", e.getMessage());
+            throw new RuntimeException("Failed to serialize validation rules", e);
+        }
     }
 }

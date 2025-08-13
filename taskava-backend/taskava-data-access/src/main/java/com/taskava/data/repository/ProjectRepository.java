@@ -139,5 +139,5 @@ public interface ProjectRepository extends JpaRepository<Project, UUID>, JpaSpec
            "ORDER BY p.updatedAt DESC")
     List<Project> findRecentByUserAndWorkspace(@Param("userId") UUID userId, 
                                                @Param("workspaceId") UUID workspaceId, 
-                                               @Param("limit") int limit);
+                                               Pageable pageable);
 }

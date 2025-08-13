@@ -1,5 +1,8 @@
 // Core types for Taskava
 
+// Re-export from schemas
+export * from './schemas/task';
+
 export interface User {
   id: string;
   email: string;
@@ -52,8 +55,7 @@ export interface Task {
   createdBy: string;
 }
 
-export type TaskStatus = 'todo' | 'in_progress' | 'in_review' | 'done' | 'blocked';
-export type TaskPriority = 'low' | 'medium' | 'high' | 'urgent';
+// TaskStatus and TaskPriority are exported from ./schemas/task
 
 export interface TaskSection {
   id: string;

@@ -1,5 +1,6 @@
-import axios, { AxiosInstance } from 'axios';
-import { 
+import axios from 'axios';
+import type { AxiosInstance } from 'axios';
+import type { 
   ApiResponse, 
   PaginatedResponse, 
   Project, 
@@ -165,12 +166,36 @@ export const projectApi = {
     );
     return response.data;
   },
+  
+  createSection: async (projectId: string, data: Partial<TaskSection>) => {
+    const response = await apiClient.post<ApiResponse<TaskSection>>(
+      `/projects/${projectId}/sections`,
+      data
+    );
+    return response.data;
+  },
+  
+  updateSection: async (projectId: string, sectionId: string, data: Partial<TaskSection>) => {
+    const response = await apiClient.put<ApiResponse<TaskSection>>(
+      `/projects/${projectId}/sections/${sectionId}`,
+      data
+    );
+    return response.data;
+  },
+  
+  deleteSection: async (projectId: string, sectionId: string) => {
+    const response = await apiClient.delete(
+      `/projects/${projectId}/sections/${sectionId}`
+    );
+    return response.data;
+  },
 };
 
 // Task API
 export const taskApi = {
   getAll: async (filters?: {
     projectId?: string;
+    sectionId?: string;
     assigneeId?: string;
     status?: string;
     priority?: string;
@@ -179,6 +204,7 @@ export const taskApi = {
   }) => {
     const params = new URLSearchParams();
     if (filters?.projectId) params.append('projectId', filters.projectId);
+    if (filters?.sectionId) params.append('sectionId', filters.sectionId);
     if (filters?.assigneeId) params.append('assigneeId', filters.assigneeId);
     if (filters?.status) params.append('status', filters.status);
     if (filters?.priority) params.append('priority', filters.priority);
@@ -201,7 +227,7 @@ export const taskApi = {
     return response.data;
   },
   
-  update: async (id: string, data: Partial<Task>) => {
+  update: async (id: string, data: Partial<Task> & { sectionId?: string; order?: number }) => {
     const response = await apiClient.put<ApiResponse<Task>>(`/tasks/${id}`, data);
     return response.data;
   },

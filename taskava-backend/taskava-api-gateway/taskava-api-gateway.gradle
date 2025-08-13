@@ -5,6 +5,7 @@ description = 'Taskava API Gateway - REST controllers and API configuration'
 
 dependencies {
     implementation project(':taskava-common')
+    implementation project(':taskava-data-access')
     implementation project(':taskava-core-service')
     implementation project(':taskava-security')
     implementation project(':taskava-integration')

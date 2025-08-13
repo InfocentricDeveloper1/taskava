@@ -27,7 +27,7 @@ import java.util.HashSet;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/v1")
+@RequestMapping("/v1")
 @RequiredArgsConstructor
 @Slf4j
 @Tag(name = "Tasks", description = "Task management endpoints")

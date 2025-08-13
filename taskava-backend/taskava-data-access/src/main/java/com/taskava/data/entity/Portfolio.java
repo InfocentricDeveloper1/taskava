@@ -30,6 +30,12 @@ public class Portfolio extends BaseEntity {
     @JoinColumn(name = "owner_id")
     private User owner;
 
-    @OneToMany(mappedBy = "portfolio", fetch = FetchType.LAZY)
-    private Set<Project> projects = new HashSet<>();
+    // TODO: Implement many-to-many relationship with Project through PortfolioProject join table
+    // @ManyToMany
+    // @JoinTable(
+    //     name = "portfolio_projects",
+    //     joinColumns = @JoinColumn(name = "portfolio_id"),
+    //     inverseJoinColumns = @JoinColumn(name = "project_id")
+    // )
+    // private Set<Project> projects = new HashSet<>();
 }
