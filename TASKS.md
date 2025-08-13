@@ -477,9 +477,9 @@ Execution plan derived from [PLANNING.md](PLANNING-v1.0.md) and [PRD.md](PRD.md)
 
 
 #### Subtasks for T034:
-- [ ] Define detailed requirements for 2.4 Customization & Fields from PRD.md
-- [ ] Design backend API/data model for 2.4 Customization & Fields
-- [ ] Implement backend logic for 2.4 Customization & Fields
+- [x] Define detailed requirements for 2.4 Customization & Fields from PRD.md
+- [x] Design backend API/data model for 2.4 Customization & Fields
+- [x] Implement backend logic for 2.4 Customization & Fields
 - [ ] Develop frontend UI for 2.4 Customization & Fields
 - [ ] Write automated tests for 2.4 Customization & Fields
 - [ ] Deploy 2.4 Customization & Fields to staging and verify functionality
@@ -802,9 +802,9 @@ Execution plan derived from [PLANNING.md](PLANNING-v1.0.md) and [PRD.md](PRD.md)
 
 
 #### Subtasks for T059:
-- [ ] Define detailed requirements for Custom Fields from PRD.md
-- [ ] Design backend API/data model for Custom Fields
-- [ ] Implement backend logic for Custom Fields
+- [x] Define detailed requirements for Custom Fields from PRD.md
+- [x] Design backend API/data model for Custom Fields
+- [x] Implement backend logic for Custom Fields
 - [ ] Develop frontend UI for Custom Fields
 - [ ] Write automated tests for Custom Fields
 - [ ] Deploy Custom Fields to staging and verify functionality

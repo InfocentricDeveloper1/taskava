@@ -15,7 +15,10 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 
 import java.util.List;
 import java.util.Map;
@@ -26,12 +29,14 @@ import java.util.UUID;
 @RequestMapping("/api/v1/projects")
 @RequiredArgsConstructor
 @Tag(name = "Projects", description = "Project management endpoints")
+@SecurityRequirement(name = "bearerAuth")
 public class ProjectController {
 
     private final ProjectService projectService;
 
     @PostMapping
     @Operation(summary = "Create a new project", description = "Creates a new project in the current workspace")
+    @PreAuthorize("@securityExpressionService.hasWorkspaceAccess(#createDto.workspaceId, authentication)")
     public ResponseEntity<ApiResponse<ProjectDTO>> createProject(
             @Valid @RequestBody ProjectCreateDTO createDto) {
         log.info("Creating new project: {}", createDto.getName());
@@ -42,6 +47,7 @@ public class ProjectController {
 
     @GetMapping("/{id}")
     @Operation(summary = "Get project by ID", description = "Retrieves project details including sections")
+    @PreAuthorize("@securityExpressionService.hasProjectAccess(#id, authentication)")
     public ResponseEntity<ApiResponse<ProjectDTO>> getProject(
             @PathVariable UUID id) {
         log.info("Fetching project: {}", id);
@@ -51,6 +57,7 @@ public class ProjectController {
 
     @PutMapping("/{id}")
     @Operation(summary = "Update project", description = "Updates project details")
+    @PreAuthorize("@securityExpressionService.canModifyProject(#id, authentication)")
     public ResponseEntity<ApiResponse<ProjectDTO>> updateProject(
             @PathVariable UUID id,
             @Valid @RequestBody ProjectDTO updateDto) {
@@ -61,6 +68,7 @@ public class ProjectController {
 
     @DeleteMapping("/{id}")
     @Operation(summary = "Delete project", description = "Soft deletes a project and all its data")
+    @PreAuthorize("@securityExpressionService.canModifyProject(#id, authentication)")
     public ResponseEntity<ApiResponse<Void>> deleteProject(
             @PathVariable UUID id) {
         log.info("Deleting project: {}", id);
@@ -70,6 +78,7 @@ public class ProjectController {
 
     @PostMapping("/{id}/archive")
     @Operation(summary = "Archive project", description = "Archives a project (can be restored)")
+    @PreAuthorize("@securityExpressionService.canModifyProject(#id, authentication)")
     public ResponseEntity<ApiResponse<Void>> archiveProject(
             @PathVariable UUID id) {
         log.info("Archiving project: {}", id);
@@ -79,6 +88,7 @@ public class ProjectController {
 
     @PostMapping("/{id}/restore")
     @Operation(summary = "Restore project", description = "Restores an archived project")
+    @PreAuthorize("@securityExpressionService.canModifyProject(#id, authentication)")
     public ResponseEntity<ApiResponse<ProjectDTO>> restoreProject(
             @PathVariable UUID id) {
         log.info("Restoring project: {}", id);
@@ -88,6 +98,7 @@ public class ProjectController {
 
     @PostMapping("/{id}/duplicate")
     @Operation(summary = "Duplicate project", description = "Creates a copy of the project with a new name")
+    @PreAuthorize("@securityExpressionService.canModifyProject(#id, authentication)")
     public ResponseEntity<ApiResponse<ProjectDTO>> duplicateProject(
             @PathVariable UUID id,
             @RequestParam String name) {
@@ -99,6 +110,7 @@ public class ProjectController {
 
     @GetMapping
     @Operation(summary = "List workspace projects", description = "Get all projects in the current workspace")
+    @PreAuthorize("hasRole('USER')")
     public ResponseEntity<ApiResponse<Page<ProjectDTO>>> getWorkspaceProjects(
             @PageableDefault(size = 20, sort = "name", direction = Sort.Direction.ASC) Pageable pageable) {
         log.info("Fetching workspace projects");
@@ -108,6 +120,7 @@ public class ProjectController {
 
     @GetMapping("/my")
     @Operation(summary = "List user's projects", description = "Get projects where the current user is a member")
+    @PreAuthorize("hasRole('USER')")
     public ResponseEntity<ApiResponse<Page<ProjectDTO>>> getUserProjects(
             @PageableDefault(size = 20, sort = "updatedAt", direction = Sort.Direction.DESC) Pageable pageable) {
         log.info("Fetching user's projects");
@@ -117,6 +130,7 @@ public class ProjectController {
 
     @GetMapping("/search")
     @Operation(summary = "Search projects", description = "Search projects by name or description")
+    @PreAuthorize("hasRole('USER')")
     public ResponseEntity<ApiResponse<Page<ProjectDTO>>> searchProjects(
             @RequestParam String query,
             @PageableDefault(size = 20, sort = "name", direction = Sort.Direction.ASC) Pageable pageable) {
@@ -129,6 +143,7 @@ public class ProjectController {
 
     @PostMapping("/{projectId}/sections")
     @Operation(summary = "Create section", description = "Creates a new section in the project")
+    @PreAuthorize("@securityExpressionService.canModifyProject(#projectId, authentication)")
     public ResponseEntity<ApiResponse<ProjectSectionDTO>> createSection(
             @PathVariable UUID projectId,
             @Valid @RequestBody ProjectSectionDTO sectionDto) {
@@ -141,6 +156,7 @@ public class ProjectController {
 
     @GetMapping("/{projectId}/sections")
     @Operation(summary = "List project sections", description = "Get all sections in a project")
+    @PreAuthorize("@securityExpressionService.hasProjectAccess(#projectId, authentication)")
     public ResponseEntity<ApiResponse<List<ProjectSectionDTO>>> getProjectSections(
             @PathVariable UUID projectId) {
         log.info("Fetching sections for project: {}", projectId);
@@ -150,6 +166,7 @@ public class ProjectController {
 
     @PutMapping("/{projectId}/sections/{sectionId}")
     @Operation(summary = "Update section", description = "Updates a section's details")
+    @PreAuthorize("@securityExpressionService.canModifyProject(#projectId, authentication)")
     public ResponseEntity<ApiResponse<ProjectSectionDTO>> updateSection(
             @PathVariable UUID projectId,
             @PathVariable UUID sectionId,
@@ -161,6 +178,7 @@ public class ProjectController {
 
     @PutMapping("/{projectId}/sections/{sectionId}/reorder")
     @Operation(summary = "Reorder section", description = "Changes the position of a section")
+    @PreAuthorize("@securityExpressionService.canModifyProject(#projectId, authentication)")
     public ResponseEntity<ApiResponse<Void>> reorderSection(
             @PathVariable UUID projectId,
             @PathVariable UUID sectionId,
@@ -172,6 +190,7 @@ public class ProjectController {
 
     @DeleteMapping("/{projectId}/sections/{sectionId}")
     @Operation(summary = "Delete section", description = "Deletes a section from the project")
+    @PreAuthorize("@securityExpressionService.canModifyProject(#projectId, authentication)")
     public ResponseEntity<ApiResponse<Void>> deleteSection(
             @PathVariable UUID projectId,
             @PathVariable UUID sectionId) {
@@ -182,6 +201,7 @@ public class ProjectController {
 
     @PostMapping("/{projectId}/sections/batch-reorder")
     @Operation(summary = "Batch reorder sections", description = "Reorders multiple sections at once")
+    @PreAuthorize("@securityExpressionService.canModifyProject(#projectId, authentication)")
     public ResponseEntity<ApiResponse<Void>> batchReorderSections(
             @PathVariable UUID projectId,
             @RequestBody Map<UUID, Integer> sectionPositions) {

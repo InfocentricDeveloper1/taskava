@@ -11,6 +11,9 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-validation'
     implementation 'org.springframework.boot:spring-boot-starter-security'
     
+    // Jackson for JSON
+    implementation 'com.fasterxml.jackson.core:jackson-annotations'
+    
     // Async processing
     implementation 'org.springframework.boot:spring-boot-starter-amqp'
     

@@ -14,8 +14,10 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 
 import java.util.List;
 import java.util.Map;
@@ -26,12 +28,14 @@ import java.util.UUID;
 @RequestMapping("/api/v1/organizations")
 @RequiredArgsConstructor
 @Tag(name = "Organizations", description = "Organization management endpoints")
+@SecurityRequirement(name = "bearerAuth")
 public class OrganizationController {
 
     private final OrganizationService organizationService;
 
     @PostMapping
     @Operation(summary = "Create a new organization")
+    @PreAuthorize("hasRole('USER')")
     public ResponseEntity<OrganizationDTO> createOrganization(
             @Valid @RequestBody OrganizationDTO organizationDTO,
             Authentication authentication) {
@@ -42,6 +46,7 @@ public class OrganizationController {
 
     @GetMapping("/{id}")
     @Operation(summary = "Get organization by ID")
+    @PreAuthorize("@securityExpressionService.hasOrganizationAccess(#id, authentication)")
     public ResponseEntity<OrganizationDTO> getOrganization(@PathVariable UUID id) {
         OrganizationDTO organization = organizationService.getOrganization(id);
         return ResponseEntity.ok(organization);
@@ -49,6 +54,7 @@ public class OrganizationController {
 
     @PutMapping("/{id}")
     @Operation(summary = "Update organization")
+    @PreAuthorize("@securityExpressionService.isOrganizationAdmin(#id, authentication)")
     public ResponseEntity<OrganizationDTO> updateOrganization(
             @PathVariable UUID id,
             @Valid @RequestBody OrganizationDTO organizationDTO) {
@@ -58,6 +64,7 @@ public class OrganizationController {
 
     @DeleteMapping("/{id}")
     @Operation(summary = "Delete organization (soft delete)")
+    @PreAuthorize("@securityExpressionService.isOrganizationOwner(#id, authentication)")
     public ResponseEntity<Void> deleteOrganization(
             @PathVariable UUID id,
             Authentication authentication) {
@@ -68,6 +75,7 @@ public class OrganizationController {
 
     @GetMapping
     @Operation(summary = "Get user's organizations")
+    @PreAuthorize("hasRole('USER')")
     public ResponseEntity<List<OrganizationDTO>> getUserOrganizations(Authentication authentication) {
         UUID userId = UUID.fromString(authentication.getName());
         List<OrganizationDTO> organizations = organizationService.getUserOrganizations(userId);
@@ -76,6 +84,7 @@ public class OrganizationController {
 
     @PostMapping("/{id}/members")
     @Operation(summary = "Add member to organization")
+    @PreAuthorize("@securityExpressionService.canInviteToOrganization(#id, authentication)")
     public ResponseEntity<MembershipDTO> addMember(
             @PathVariable UUID id,
             @RequestBody Map<String, Object> request,
@@ -90,6 +99,7 @@ public class OrganizationController {
 
     @DeleteMapping("/{id}/members/{userId}")
     @Operation(summary = "Remove member from organization")
+    @PreAuthorize("@securityExpressionService.isOrganizationAdmin(#id, authentication)")
     public ResponseEntity<Void> removeMember(
             @PathVariable UUID id,
             @PathVariable UUID userId) {
@@ -99,6 +109,7 @@ public class OrganizationController {
 
     @GetMapping("/{id}/members")
     @Operation(summary = "Get organization members")
+    @PreAuthorize("@securityExpressionService.hasOrganizationAccess(#id, authentication)")
     public ResponseEntity<Page<MembershipDTO>> getOrganizationMembers(
             @PathVariable UUID id,
             @PageableDefault(size = 20, sort = "joinedAt", direction = Sort.Direction.DESC) Pageable pageable) {

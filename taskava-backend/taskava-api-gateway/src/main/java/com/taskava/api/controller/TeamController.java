@@ -14,8 +14,10 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 
 import java.util.UUID;
 
@@ -24,6 +26,7 @@ import java.util.UUID;
 @RequestMapping("/api/v1")
 @RequiredArgsConstructor
 @Tag(name = "Teams", description = "Team management endpoints")
+@SecurityRequirement(name = "bearerAuth")
 public class TeamController {
 
     private final TeamService teamService;
@@ -33,6 +36,7 @@ public class TeamController {
      */
     @PostMapping("/workspaces/{workspaceId}/teams")
     @Operation(summary = "Create a new team", description = "Creates a new team within the specified workspace")
+    @PreAuthorize("@securityExpressionService.hasWorkspaceAccess(#workspaceId, authentication)")
     public ResponseEntity<ApiResponse<TeamDTO>> createTeam(
             @PathVariable UUID workspaceId,
             @Valid @RequestBody CreateTeamRequest request,
@@ -56,6 +60,7 @@ public class TeamController {
      */
     @GetMapping("/teams/{id}")
     @Operation(summary = "Get team by ID", description = "Retrieves detailed information about a specific team")
+    @PreAuthorize("@securityExpressionService.hasTeamAccess(#id, authentication)")
     public ResponseEntity<ApiResponse<TeamDTO>> getTeam(
             @PathVariable UUID id) {
         log.info("Fetching team: {}", id);
@@ -68,6 +73,7 @@ public class TeamController {
      */
     @PutMapping("/teams/{id}")
     @Operation(summary = "Update team", description = "Updates team information")
+    @PreAuthorize("@securityExpressionService.isTeamAdmin(#id, authentication)")
     public ResponseEntity<ApiResponse<TeamDTO>> updateTeam(
             @PathVariable UUID id,
             @Valid @RequestBody UpdateTeamRequest request) {
@@ -81,6 +87,7 @@ public class TeamController {
      */
     @DeleteMapping("/teams/{id}")
     @Operation(summary = "Delete team", description = "Soft deletes a team (can be restored)")
+    @PreAuthorize("@securityExpressionService.isTeamAdmin(#id, authentication)")
     public ResponseEntity<ApiResponse<Void>> deleteTeam(
             @PathVariable UUID id,
             Authentication authentication) {
@@ -95,6 +102,7 @@ public class TeamController {
      */
     @GetMapping("/workspaces/{workspaceId}/teams")
     @Operation(summary = "List workspace teams", description = "Retrieves all teams in the specified workspace")
+    @PreAuthorize("@securityExpressionService.hasWorkspaceAccess(#workspaceId, authentication)")
     public ResponseEntity<ApiResponse<Page<TeamDTO>>> getWorkspaceTeams(
             @PathVariable UUID workspaceId,
             @PageableDefault(size = 20, sort = "name", direction = Sort.Direction.ASC) Pageable pageable) {
@@ -108,6 +116,7 @@ public class TeamController {
      */
     @PostMapping("/teams/{id}/members")
     @Operation(summary = "Add team member", description = "Adds a new member to the team with specified role")
+    @PreAuthorize("@securityExpressionService.canInviteToTeam(#id, authentication)")
     public ResponseEntity<ApiResponse<TeamMemberDTO>> addTeamMember(
             @PathVariable UUID id,
             @Valid @RequestBody AddTeamMemberRequest request,
@@ -126,6 +135,7 @@ public class TeamController {
      */
     @DeleteMapping("/teams/{id}/members/{userId}")
     @Operation(summary = "Remove team member", description = "Removes a member from the team")
+    @PreAuthorize("@securityExpressionService.isTeamAdmin(#id, authentication)")
     public ResponseEntity<ApiResponse<Void>> removeTeamMember(
             @PathVariable UUID id,
             @PathVariable UUID userId,
@@ -142,6 +152,7 @@ public class TeamController {
      */
     @PutMapping("/teams/{id}/members/{userId}")
     @Operation(summary = "Update team member role", description = "Updates the role of a team member")
+    @PreAuthorize("@securityExpressionService.isTeamAdmin(#id, authentication)")
     public ResponseEntity<ApiResponse<TeamMemberDTO>> updateTeamMemberRole(
             @PathVariable UUID id,
             @PathVariable UUID userId,
@@ -157,6 +168,7 @@ public class TeamController {
      */
     @GetMapping("/teams/{id}/members")
     @Operation(summary = "List team members", description = "Retrieves all members of a team with their roles")
+    @PreAuthorize("@securityExpressionService.hasTeamAccess(#id, authentication)")
     public ResponseEntity<ApiResponse<Page<TeamMemberDTO>>> getTeamMembers(
             @PathVariable UUID id,
             @PageableDefault(size = 20, sort = "joinedAt", direction = Sort.Direction.DESC) Pageable pageable) {

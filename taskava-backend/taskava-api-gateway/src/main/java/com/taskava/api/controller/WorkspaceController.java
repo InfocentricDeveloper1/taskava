@@ -17,8 +17,10 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 
 import java.util.List;
 import java.util.UUID;
@@ -28,6 +30,7 @@ import java.util.UUID;
 @RequestMapping("/api/v1/workspaces")
 @RequiredArgsConstructor
 @Tag(name = "Workspaces", description = "Workspace management endpoints")
+@SecurityRequirement(name = "bearerAuth")
 public class WorkspaceController {
 
     private final WorkspaceService workspaceService;
@@ -38,6 +41,7 @@ public class WorkspaceController {
     @PostMapping
     @Operation(summary = "Create a new workspace", 
             description = "Creates a new workspace within an organization")
+    @PreAuthorize("@securityExpressionService.hasOrganizationAccess(#request.organizationId, authentication)")
     public ResponseEntity<ApiResponse<WorkspaceDTO>> createWorkspace(
             @Valid @RequestBody CreateWorkspaceRequest request,
             Authentication authentication) {
@@ -53,6 +57,7 @@ public class WorkspaceController {
     @GetMapping("/{id}")
     @Operation(summary = "Get workspace by ID", 
             description = "Retrieves workspace details including member and project counts")
+    @PreAuthorize("@securityExpressionService.hasWorkspaceAccess(#id, authentication)")
     public ResponseEntity<ApiResponse<WorkspaceDTO>> getWorkspace(
             @PathVariable UUID id,
             Authentication authentication) {
@@ -64,6 +69,7 @@ public class WorkspaceController {
     @PutMapping("/{id}")
     @Operation(summary = "Update workspace", 
             description = "Updates workspace details (name, description, visibility, etc.)")
+    @PreAuthorize("@securityExpressionService.canModifyWorkspace(#id, authentication)")
     public ResponseEntity<ApiResponse<WorkspaceDTO>> updateWorkspace(
             @PathVariable UUID id,
             @Valid @RequestBody UpdateWorkspaceRequest request,
@@ -76,6 +82,7 @@ public class WorkspaceController {
     @DeleteMapping("/{id}")
     @Operation(summary = "Delete workspace", 
             description = "Soft deletes a workspace and all associated data")
+    @PreAuthorize("@securityExpressionService.isWorkspaceAdmin(#id, authentication)")
     public ResponseEntity<ApiResponse<Void>> deleteWorkspace(
             @PathVariable UUID id,
             Authentication authentication) {
@@ -88,6 +95,7 @@ public class WorkspaceController {
     @GetMapping
     @Operation(summary = "List user's workspaces", 
             description = "Get all workspaces where the current user is a member")
+    @PreAuthorize("hasRole('USER')")
     public ResponseEntity<ApiResponse<Page<WorkspaceDTO>>> getUserWorkspaces(
             Authentication authentication,
             @PageableDefault(size = 20, sort = "name", direction = Sort.Direction.ASC) Pageable pageable) {
@@ -100,6 +108,7 @@ public class WorkspaceController {
     @GetMapping("/organization/{organizationId}")
     @Operation(summary = "List organization's workspaces", 
             description = "Get all workspaces in an organization")
+    @PreAuthorize("@securityExpressionService.hasOrganizationAccess(#organizationId, authentication)")
     public ResponseEntity<ApiResponse<Page<WorkspaceDTO>>> getOrganizationWorkspaces(
             @PathVariable UUID organizationId,
             @PageableDefault(size = 20, sort = "name", direction = Sort.Direction.ASC) Pageable pageable,
@@ -113,6 +122,7 @@ public class WorkspaceController {
     @PostMapping("/{id}/members")
     @Operation(summary = "Add member to workspace", 
             description = "Adds a new member to the workspace with specified role and permissions")
+    @PreAuthorize("@securityExpressionService.canInviteToWorkspace(#id, authentication)")
     public ResponseEntity<ApiResponse<MembershipDTO>> addMember(
             @PathVariable UUID id,
             @Valid @RequestBody AddWorkspaceMemberRequest request,
@@ -129,6 +139,7 @@ public class WorkspaceController {
     @DeleteMapping("/{id}/members/{userId}")
     @Operation(summary = "Remove member from workspace", 
             description = "Removes a member from the workspace")
+    @PreAuthorize("@securityExpressionService.isWorkspaceAdmin(#id, authentication)")
     public ResponseEntity<ApiResponse<Void>> removeMember(
             @PathVariable UUID id,
             @PathVariable UUID userId,
@@ -142,6 +153,7 @@ public class WorkspaceController {
     @PutMapping("/{id}/members/{userId}")
     @Operation(summary = "Update member role", 
             description = "Updates a member's role and permissions in the workspace")
+    @PreAuthorize("@securityExpressionService.isWorkspaceAdmin(#id, authentication)")
     public ResponseEntity<ApiResponse<MembershipDTO>> updateMemberRole(
             @PathVariable UUID id,
             @PathVariable UUID userId,
@@ -156,6 +168,7 @@ public class WorkspaceController {
     @GetMapping("/{id}/members")
     @Operation(summary = "List workspace members", 
             description = "Get all members of a workspace with their roles and permissions")
+    @PreAuthorize("@securityExpressionService.hasWorkspaceAccess(#id, authentication)")
     public ResponseEntity<ApiResponse<Page<MembershipDTO>>> getWorkspaceMembers(
             @PathVariable UUID id,
             @PageableDefault(size = 20, sort = "joinedAt", direction = Sort.Direction.DESC) Pageable pageable) {
@@ -169,6 +182,7 @@ public class WorkspaceController {
     @GetMapping("/{id}/teams")
     @Operation(summary = "List workspace teams", 
             description = "Get all teams in the workspace")
+    @PreAuthorize("@securityExpressionService.hasWorkspaceAccess(#id, authentication)")
     public ResponseEntity<ApiResponse<Page<TeamDTO>>> getWorkspaceTeams(
             @PathVariable UUID id,
             @PageableDefault(size = 20, sort = "name", direction = Sort.Direction.ASC) Pageable pageable) {
@@ -180,6 +194,7 @@ public class WorkspaceController {
     @GetMapping("/{id}/teams/count")
     @Operation(summary = "Count workspace teams", 
             description = "Get the total number of teams in the workspace")
+    @PreAuthorize("@securityExpressionService.hasWorkspaceAccess(#id, authentication)")
     public ResponseEntity<ApiResponse<Long>> countWorkspaceTeams(@PathVariable UUID id) {
         Long count = teamService.countWorkspaceTeams(id);
         return ResponseEntity.ok(ApiResponse.success(count));
@@ -190,6 +205,7 @@ public class WorkspaceController {
     @GetMapping("/{id}/projects")
     @Operation(summary = "List workspace projects", 
             description = "Get all projects in the workspace")
+    @PreAuthorize("@securityExpressionService.hasWorkspaceAccess(#id, authentication)")
     public ResponseEntity<ApiResponse<Page<ProjectDTO>>> getWorkspaceProjects(
             @PathVariable UUID id,
             @RequestParam(required = false) Boolean archived,
@@ -203,6 +219,7 @@ public class WorkspaceController {
     @GetMapping("/{id}/projects/recent")
     @Operation(summary = "Get recent projects", 
             description = "Get recently accessed projects in the workspace")
+    @PreAuthorize("@securityExpressionService.hasWorkspaceAccess(#id, authentication)")
     public ResponseEntity<ApiResponse<List<ProjectDTO>>> getRecentProjects(
             @PathVariable UUID id,
             @RequestParam(defaultValue = "10") int limit,
@@ -216,6 +233,7 @@ public class WorkspaceController {
     @GetMapping("/{id}/projects/count")
     @Operation(summary = "Count workspace projects", 
             description = "Get the total number of projects in the workspace")
+    @PreAuthorize("@securityExpressionService.hasWorkspaceAccess(#id, authentication)")
     public ResponseEntity<ApiResponse<Long>> countWorkspaceProjects(
             @PathVariable UUID id,
             @RequestParam(required = false) Boolean archived) {
@@ -228,6 +246,7 @@ public class WorkspaceController {
     @GetMapping("/{id}/custom-fields")
     @Operation(summary = "List workspace custom fields", 
             description = "Get all custom field definitions for the workspace")
+    @PreAuthorize("@securityExpressionService.hasWorkspaceAccess(#id, authentication)")
     public ResponseEntity<ApiResponse<List<CustomFieldDTO>>> getWorkspaceCustomFields(
             @PathVariable UUID id,
             @RequestParam(required = false) String fieldType) {
@@ -239,6 +258,7 @@ public class WorkspaceController {
     @PostMapping("/{id}/custom-fields")
     @Operation(summary = "Create custom field", 
             description = "Creates a new custom field definition for the workspace")
+    @PreAuthorize("@securityExpressionService.canManageCustomFields(#id, authentication)")
     public ResponseEntity<ApiResponse<CustomFieldDTO>> createCustomField(
             @PathVariable UUID id,
             @Valid @RequestBody CustomFieldDTO fieldDto,
@@ -255,6 +275,7 @@ public class WorkspaceController {
     @PutMapping("/{id}/custom-fields/{fieldId}")
     @Operation(summary = "Update custom field", 
             description = "Updates a custom field definition")
+    @PreAuthorize("@securityExpressionService.canManageCustomFields(#id, authentication)")
     public ResponseEntity<ApiResponse<CustomFieldDTO>> updateCustomField(
             @PathVariable UUID id,
             @PathVariable UUID fieldId,
@@ -269,6 +290,7 @@ public class WorkspaceController {
     @DeleteMapping("/{id}/custom-fields/{fieldId}")
     @Operation(summary = "Delete custom field", 
             description = "Deletes a custom field definition (soft delete)")
+    @PreAuthorize("@securityExpressionService.canManageCustomFields(#id, authentication)")
     public ResponseEntity<ApiResponse<Void>> deleteCustomField(
             @PathVariable UUID id,
             @PathVariable UUID fieldId,
@@ -284,6 +306,7 @@ public class WorkspaceController {
     @GetMapping("/{id}/statistics")
     @Operation(summary = "Get workspace statistics", 
             description = "Get comprehensive statistics about the workspace")
+    @PreAuthorize("@securityExpressionService.hasWorkspaceAccess(#id, authentication)")
     public ResponseEntity<ApiResponse<WorkspaceStatisticsDTO>> getWorkspaceStatistics(
             @PathVariable UUID id) {
         log.info("Fetching statistics for workspace: {}", id);
@@ -294,6 +317,7 @@ public class WorkspaceController {
     @GetMapping("/{id}/activity")
     @Operation(summary = "Get workspace activity", 
             description = "Get recent activity feed for the workspace")
+    @PreAuthorize("@securityExpressionService.hasWorkspaceAccess(#id, authentication)")
     public ResponseEntity<ApiResponse<Page<ActivityDTO>>> getWorkspaceActivity(
             @PathVariable UUID id,
             @PageableDefault(size = 50, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
@@ -307,6 +331,7 @@ public class WorkspaceController {
     @PostMapping("/{id}/archive")
     @Operation(summary = "Archive workspace", 
             description = "Archives a workspace (can be restored later)")
+    @PreAuthorize("@securityExpressionService.isWorkspaceAdmin(#id, authentication)")
     public ResponseEntity<ApiResponse<Void>> archiveWorkspace(
             @PathVariable UUID id,
             Authentication authentication) {
@@ -319,6 +344,7 @@ public class WorkspaceController {
     @PostMapping("/{id}/restore")
     @Operation(summary = "Restore workspace", 
             description = "Restores an archived workspace")
+    @PreAuthorize("@securityExpressionService.isWorkspaceAdmin(#id, authentication)")
     public ResponseEntity<ApiResponse<WorkspaceDTO>> restoreWorkspace(
             @PathVariable UUID id,
             Authentication authentication) {
@@ -331,6 +357,7 @@ public class WorkspaceController {
     @PostMapping("/{id}/duplicate")
     @Operation(summary = "Duplicate workspace", 
             description = "Creates a copy of the workspace with a new name")
+    @PreAuthorize("@securityExpressionService.isWorkspaceAdmin(#id, authentication)")
     public ResponseEntity<ApiResponse<WorkspaceDTO>> duplicateWorkspace(
             @PathVariable UUID id,
             @RequestParam String name,
