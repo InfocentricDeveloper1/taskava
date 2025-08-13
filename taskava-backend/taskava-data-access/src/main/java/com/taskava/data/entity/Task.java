@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.Where;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.HashMap;
@@ -55,11 +56,11 @@ public class Task extends BaseEntity {
     @Column(name = "completed_at")
     private Instant completedAt;
 
-    @Column(name = "estimated_hours")
-    private Double estimatedHours;
+    @Column(name = "estimated_hours", precision = 10, scale = 2)
+    private BigDecimal estimatedHours;
 
-    @Column(name = "actual_hours")
-    private Double actualHours;
+    @Column(name = "actual_hours", precision = 10, scale = 2)
+    private BigDecimal actualHours;
 
     @Column(name = "progress_percentage")
     private Integer progressPercentage = 0;
@@ -165,11 +166,22 @@ public class Task extends BaseEntity {
     @Data
     public static class RecurrenceSettings {
         @Enumerated(EnumType.STRING)
+        @Column(name = "recurrence_type")
         private RecurrenceType type;
+        
+        @Column(name = "recurrence_interval")
         private Integer interval;
+        
+        @Column(name = "recurrence_days_of_week")
         private String daysOfWeek; // JSON array
+        
+        @Column(name = "recurrence_day_of_month")
         private Integer dayOfMonth;
+        
+        @Column(name = "recurrence_end_date")
         private LocalDate endDate;
+        
+        @Column(name = "recurrence_max_occurrences")
         private Integer maxOccurrences;
     }
 

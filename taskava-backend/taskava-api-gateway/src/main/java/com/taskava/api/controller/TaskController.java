@@ -5,6 +5,8 @@ import com.taskava.service.TaskService;
 import com.taskava.service.dto.TaskDTO;
 import com.taskava.service.dto.CreateTaskRequest;
 import com.taskava.service.dto.UpdateTaskRequest;
+import com.taskava.service.dto.CommentDTO;
+import com.taskava.service.dto.CreateCommentRequest;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;

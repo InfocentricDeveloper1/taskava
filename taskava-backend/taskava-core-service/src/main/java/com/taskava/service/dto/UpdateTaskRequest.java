@@ -6,6 +6,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.Map;
 import java.util.Set;
@@ -32,8 +33,8 @@ public class UpdateTaskRequest {
     private LocalDate startDate;
     private LocalDate dueDate;
     
-    private Double estimatedHours;
-    private Double actualHours;
+    private BigDecimal estimatedHours;
+    private BigDecimal actualHours;
     private Integer progressPercentage;
     private Integer storyPoints;
     

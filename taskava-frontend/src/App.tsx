@@ -1,34 +1,62 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { useState, useEffect } from 'react'
+import './simple.css'
+import { testHealthEndpoint, testSwaggerDocs } from './services/api'
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [healthStatus, setHealthStatus] = useState<any>(null)
+  const [apiEndpoints, setApiEndpoints] = useState<any>(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    async function checkBackendConnection() {
+      setLoading(true)
+      
+      // Test health endpoint
+      const health = await testHealthEndpoint()
+      setHealthStatus(health)
+      
+      // Test API docs
+      const docs = await testSwaggerDocs()
+      setApiEndpoints(docs)
+      
+      setLoading(false)
+    }
+    
+    checkBackendConnection()
+  }, [])
 
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
+    <div className="App">
+      <h1>Taskava Frontend</h1>
+      
       <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
+        <h2>Backend Connection Test</h2>
+        
+        {loading ? (
+          <p>Testing connection...</p>
+        ) : (
+          <>
+            <div style={{ marginBottom: '20px', textAlign: 'left' }}>
+              <h3>Health Check:</h3>
+              <pre style={{ background: '#f0f0f0', padding: '10px', borderRadius: '5px' }}>
+                {JSON.stringify(healthStatus, null, 2)}
+              </pre>
+            </div>
+            
+            <div style={{ textAlign: 'left' }}>
+              <h3>Available API Endpoints:</h3>
+              <pre style={{ background: '#f0f0f0', padding: '10px', borderRadius: '5px' }}>
+                {JSON.stringify(apiEndpoints, null, 2)}
+              </pre>
+            </div>
+          </>
+        )}
       </div>
+      
       <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
+        Backend API: http://localhost:8080/api
       </p>
-    </>
+    </div>
   )
 }
 
