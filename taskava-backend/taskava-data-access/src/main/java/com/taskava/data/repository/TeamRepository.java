@@ -45,5 +45,8 @@ public interface TeamRepository extends JpaRepository<Team, UUID> {
     @Query("SELECT COUNT(p) FROM Team t JOIN t.projects p WHERE t.id = :teamId AND p.deleted = false")
     Long countActiveProjects(@Param("teamId") UUID teamId);
 
+    @Query("SELECT COUNT(t) FROM Team t WHERE t.workspace.id = :workspaceId AND t.deleted = false")
+    Long countByWorkspaceId(@Param("workspaceId") UUID workspaceId);
+
     boolean existsByWorkspaceIdAndName(UUID workspaceId, String name);
 }

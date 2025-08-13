@@ -32,6 +32,12 @@ public class TeamService {
     private final WorkspaceRepository workspaceRepository;
     private final UserRepository userRepository;
 
+    @PreAuthorize("@workspaceService.canViewWorkspace(#workspaceId, authentication.principal.id)")
+    @Transactional(readOnly = true)
+    public Long countWorkspaceTeams(UUID workspaceId) {
+        return teamRepository.countByWorkspaceId(workspaceId);
+    }
+    
     /**
      * Create a new team within a workspace
      */

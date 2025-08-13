@@ -1,8 +1,11 @@
 package com.taskava.api.controller;
 
-import com.taskava.common.dto.WorkspaceDTO;
-import com.taskava.common.dto.MembershipDTO;
+import com.taskava.common.dto.*;
+import com.taskava.common.response.ApiResponse;
 import com.taskava.service.WorkspaceService;
+import com.taskava.service.TeamService;
+import com.taskava.service.ProjectService;
+import com.taskava.service.CustomFieldService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -17,7 +20,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Map;
+import java.util.List;
 import java.util.UUID;
 
 @Slf4j
@@ -28,102 +31,314 @@ import java.util.UUID;
 public class WorkspaceController {
 
     private final WorkspaceService workspaceService;
+    private final TeamService teamService;
+    private final ProjectService projectService;
+    private final CustomFieldService customFieldService;
 
     @PostMapping
-    @Operation(summary = "Create a new workspace")
-    public ResponseEntity<WorkspaceDTO> createWorkspace(
-            @Valid @RequestBody WorkspaceDTO workspaceDTO,
+    @Operation(summary = "Create a new workspace", 
+            description = "Creates a new workspace within an organization")
+    public ResponseEntity<ApiResponse<WorkspaceDTO>> createWorkspace(
+            @Valid @RequestBody CreateWorkspaceRequest request,
             Authentication authentication) {
         UUID userId = UUID.fromString(authentication.getName());
-        WorkspaceDTO created = workspaceService.createWorkspace(workspaceDTO, userId);
-        return ResponseEntity.status(HttpStatus.CREATED).body(created);
+        log.info("Creating workspace: {} in organization: {} by user: {}", 
+                request.getName(), request.getOrganizationId(), userId);
+        
+        WorkspaceDTO created = workspaceService.createWorkspace(request, userId);
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(ApiResponse.success("Workspace created successfully", created));
     }
 
     @GetMapping("/{id}")
-    @Operation(summary = "Get workspace by ID")
-    public ResponseEntity<WorkspaceDTO> getWorkspace(@PathVariable UUID id) {
+    @Operation(summary = "Get workspace by ID", 
+            description = "Retrieves workspace details including member and project counts")
+    public ResponseEntity<ApiResponse<WorkspaceDTO>> getWorkspace(
+            @PathVariable UUID id,
+            Authentication authentication) {
+        log.info("Fetching workspace: {} for user: {}", id, authentication.getName());
         WorkspaceDTO workspace = workspaceService.getWorkspace(id);
-        return ResponseEntity.ok(workspace);
+        return ResponseEntity.ok(ApiResponse.success(workspace));
     }
 
     @PutMapping("/{id}")
-    @Operation(summary = "Update workspace")
-    public ResponseEntity<WorkspaceDTO> updateWorkspace(
+    @Operation(summary = "Update workspace", 
+            description = "Updates workspace details (name, description, visibility, etc.)")
+    public ResponseEntity<ApiResponse<WorkspaceDTO>> updateWorkspace(
             @PathVariable UUID id,
-            @Valid @RequestBody WorkspaceDTO workspaceDTO) {
-        WorkspaceDTO updated = workspaceService.updateWorkspace(id, workspaceDTO);
-        return ResponseEntity.ok(updated);
+            @Valid @RequestBody UpdateWorkspaceRequest request,
+            Authentication authentication) {
+        log.info("Updating workspace: {} by user: {}", id, authentication.getName());
+        WorkspaceDTO updated = workspaceService.updateWorkspace(id, request);
+        return ResponseEntity.ok(ApiResponse.success("Workspace updated successfully", updated));
     }
 
     @DeleteMapping("/{id}")
-    @Operation(summary = "Delete workspace (soft delete)")
-    public ResponseEntity<Void> deleteWorkspace(
+    @Operation(summary = "Delete workspace", 
+            description = "Soft deletes a workspace and all associated data")
+    public ResponseEntity<ApiResponse<Void>> deleteWorkspace(
             @PathVariable UUID id,
             Authentication authentication) {
         UUID userId = UUID.fromString(authentication.getName());
+        log.info("Deleting workspace: {} by user: {}", id, userId);
         workspaceService.deleteWorkspace(id, userId);
-        return ResponseEntity.noContent().build();
+        return ResponseEntity.ok(ApiResponse.success("Workspace deleted successfully"));
     }
 
     @GetMapping
-    @Operation(summary = "Get user's workspaces")
-    public ResponseEntity<Page<WorkspaceDTO>> getUserWorkspaces(
+    @Operation(summary = "List user's workspaces", 
+            description = "Get all workspaces where the current user is a member")
+    public ResponseEntity<ApiResponse<Page<WorkspaceDTO>>> getUserWorkspaces(
             Authentication authentication,
             @PageableDefault(size = 20, sort = "name", direction = Sort.Direction.ASC) Pageable pageable) {
         UUID userId = UUID.fromString(authentication.getName());
+        log.info("Fetching workspaces for user: {}", userId);
         Page<WorkspaceDTO> workspaces = workspaceService.getUserWorkspaces(userId, pageable);
-        return ResponseEntity.ok(workspaces);
+        return ResponseEntity.ok(ApiResponse.success(workspaces));
     }
 
     @GetMapping("/organization/{organizationId}")
-    @Operation(summary = "Get organization's workspaces")
-    public ResponseEntity<Page<WorkspaceDTO>> getOrganizationWorkspaces(
+    @Operation(summary = "List organization's workspaces", 
+            description = "Get all workspaces in an organization")
+    public ResponseEntity<ApiResponse<Page<WorkspaceDTO>>> getOrganizationWorkspaces(
             @PathVariable UUID organizationId,
-            @PageableDefault(size = 20, sort = "name", direction = Sort.Direction.ASC) Pageable pageable) {
+            @PageableDefault(size = 20, sort = "name", direction = Sort.Direction.ASC) Pageable pageable,
+            Authentication authentication) {
+        log.info("Fetching workspaces for organization: {} by user: {}", 
+                organizationId, authentication.getName());
         Page<WorkspaceDTO> workspaces = workspaceService.getOrganizationWorkspaces(organizationId, pageable);
-        return ResponseEntity.ok(workspaces);
+        return ResponseEntity.ok(ApiResponse.success(workspaces));
     }
 
     @PostMapping("/{id}/members")
-    @Operation(summary = "Add member to workspace")
-    public ResponseEntity<MembershipDTO> addMember(
+    @Operation(summary = "Add member to workspace", 
+            description = "Adds a new member to the workspace with specified role and permissions")
+    public ResponseEntity<ApiResponse<MembershipDTO>> addMember(
             @PathVariable UUID id,
-            @RequestBody Map<String, Object> request,
+            @Valid @RequestBody AddWorkspaceMemberRequest request,
             Authentication authentication) {
-        UUID userId = UUID.fromString(request.get("userId").toString());
-        String role = request.get("role").toString();
         UUID invitedBy = UUID.fromString(authentication.getName());
+        log.info("Adding member to workspace {} with role {} by user {}", 
+                id, request.getRole(), invitedBy);
         
-        MembershipDTO membership = workspaceService.addMember(id, userId, role, invitedBy);
-        return ResponseEntity.status(HttpStatus.CREATED).body(membership);
+        MembershipDTO membership = workspaceService.addMember(id, request, invitedBy);
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(ApiResponse.success("Member added successfully", membership));
     }
 
     @DeleteMapping("/{id}/members/{userId}")
-    @Operation(summary = "Remove member from workspace")
-    public ResponseEntity<Void> removeMember(
-            @PathVariable UUID id,
-            @PathVariable UUID userId) {
-        workspaceService.removeMember(id, userId);
-        return ResponseEntity.noContent().build();
-    }
-
-    @PutMapping("/{id}/members/{userId}/role")
-    @Operation(summary = "Update member role in workspace")
-    public ResponseEntity<MembershipDTO> updateMemberRole(
+    @Operation(summary = "Remove member from workspace", 
+            description = "Removes a member from the workspace")
+    public ResponseEntity<ApiResponse<Void>> removeMember(
             @PathVariable UUID id,
             @PathVariable UUID userId,
-            @RequestBody Map<String, String> request) {
-        String newRole = request.get("role");
-        MembershipDTO updated = workspaceService.updateMemberRole(id, userId, newRole);
-        return ResponseEntity.ok(updated);
+            Authentication authentication) {
+        log.info("Removing member {} from workspace {} by user {}", 
+                userId, id, authentication.getName());
+        workspaceService.removeMember(id, userId);
+        return ResponseEntity.ok(ApiResponse.success("Member removed successfully"));
+    }
+
+    @PutMapping("/{id}/members/{userId}")
+    @Operation(summary = "Update member role", 
+            description = "Updates a member's role and permissions in the workspace")
+    public ResponseEntity<ApiResponse<MembershipDTO>> updateMemberRole(
+            @PathVariable UUID id,
+            @PathVariable UUID userId,
+            @Valid @RequestBody UpdateWorkspaceMemberRoleRequest request,
+            Authentication authentication) {
+        log.info("Updating member {} role in workspace {} to {} by user {}", 
+                userId, id, request.getRole(), authentication.getName());
+        MembershipDTO updated = workspaceService.updateMemberRole(id, userId, request);
+        return ResponseEntity.ok(ApiResponse.success("Member role updated successfully", updated));
     }
 
     @GetMapping("/{id}/members")
-    @Operation(summary = "Get workspace members")
-    public ResponseEntity<Page<MembershipDTO>> getWorkspaceMembers(
+    @Operation(summary = "List workspace members", 
+            description = "Get all members of a workspace with their roles and permissions")
+    public ResponseEntity<ApiResponse<Page<MembershipDTO>>> getWorkspaceMembers(
             @PathVariable UUID id,
             @PageableDefault(size = 20, sort = "joinedAt", direction = Sort.Direction.DESC) Pageable pageable) {
+        log.info("Fetching members for workspace: {}", id);
         Page<MembershipDTO> members = workspaceService.getWorkspaceMembers(id, pageable);
-        return ResponseEntity.ok(members);
+        return ResponseEntity.ok(ApiResponse.success(members));
+    }
+
+    // Team Management Endpoints
+
+    @GetMapping("/{id}/teams")
+    @Operation(summary = "List workspace teams", 
+            description = "Get all teams in the workspace")
+    public ResponseEntity<ApiResponse<Page<TeamDTO>>> getWorkspaceTeams(
+            @PathVariable UUID id,
+            @PageableDefault(size = 20, sort = "name", direction = Sort.Direction.ASC) Pageable pageable) {
+        log.info("Fetching teams for workspace: {}", id);
+        Page<TeamDTO> teams = teamService.getWorkspaceTeams(id, pageable);
+        return ResponseEntity.ok(ApiResponse.success(teams));
+    }
+
+    @GetMapping("/{id}/teams/count")
+    @Operation(summary = "Count workspace teams", 
+            description = "Get the total number of teams in the workspace")
+    public ResponseEntity<ApiResponse<Long>> countWorkspaceTeams(@PathVariable UUID id) {
+        Long count = teamService.countWorkspaceTeams(id);
+        return ResponseEntity.ok(ApiResponse.success(count));
+    }
+
+    // Project Management Endpoints
+
+    @GetMapping("/{id}/projects")
+    @Operation(summary = "List workspace projects", 
+            description = "Get all projects in the workspace")
+    public ResponseEntity<ApiResponse<Page<ProjectDTO>>> getWorkspaceProjects(
+            @PathVariable UUID id,
+            @RequestParam(required = false) Boolean archived,
+            @RequestParam(required = false) UUID teamId,
+            @PageableDefault(size = 20, sort = "name", direction = Sort.Direction.ASC) Pageable pageable) {
+        log.info("Fetching projects for workspace: {}, archived: {}, teamId: {}", id, archived, teamId);
+        Page<ProjectDTO> projects = projectService.getWorkspaceProjects(id, archived, teamId, pageable);
+        return ResponseEntity.ok(ApiResponse.success(projects));
+    }
+
+    @GetMapping("/{id}/projects/recent")
+    @Operation(summary = "Get recent projects", 
+            description = "Get recently accessed projects in the workspace")
+    public ResponseEntity<ApiResponse<List<ProjectDTO>>> getRecentProjects(
+            @PathVariable UUID id,
+            @RequestParam(defaultValue = "10") int limit,
+            Authentication authentication) {
+        UUID userId = UUID.fromString(authentication.getName());
+        log.info("Fetching recent projects for user {} in workspace {}", userId, id);
+        List<ProjectDTO> projects = projectService.getRecentProjects(id, userId, limit);
+        return ResponseEntity.ok(ApiResponse.success(projects));
+    }
+
+    @GetMapping("/{id}/projects/count")
+    @Operation(summary = "Count workspace projects", 
+            description = "Get the total number of projects in the workspace")
+    public ResponseEntity<ApiResponse<Long>> countWorkspaceProjects(
+            @PathVariable UUID id,
+            @RequestParam(required = false) Boolean archived) {
+        Long count = projectService.countWorkspaceProjects(id, archived);
+        return ResponseEntity.ok(ApiResponse.success(count));
+    }
+
+    // Custom Field Management Endpoints
+
+    @GetMapping("/{id}/custom-fields")
+    @Operation(summary = "List workspace custom fields", 
+            description = "Get all custom field definitions for the workspace")
+    public ResponseEntity<ApiResponse<List<CustomFieldDTO>>> getWorkspaceCustomFields(
+            @PathVariable UUID id,
+            @RequestParam(required = false) String fieldType) {
+        log.info("Fetching custom fields for workspace: {}, type: {}", id, fieldType);
+        List<CustomFieldDTO> fields = customFieldService.getWorkspaceCustomFields(id, fieldType);
+        return ResponseEntity.ok(ApiResponse.success(fields));
+    }
+
+    @PostMapping("/{id}/custom-fields")
+    @Operation(summary = "Create custom field", 
+            description = "Creates a new custom field definition for the workspace")
+    public ResponseEntity<ApiResponse<CustomFieldDTO>> createCustomField(
+            @PathVariable UUID id,
+            @Valid @RequestBody CustomFieldDTO fieldDto,
+            Authentication authentication) {
+        UUID userId = UUID.fromString(authentication.getName());
+        log.info("Creating custom field {} in workspace {} by user {}", 
+                fieldDto.getName(), id, userId);
+        fieldDto.setWorkspaceId(id);
+        CustomFieldDTO created = customFieldService.createCustomField(fieldDto, userId);
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(ApiResponse.success("Custom field created successfully", created));
+    }
+
+    @PutMapping("/{id}/custom-fields/{fieldId}")
+    @Operation(summary = "Update custom field", 
+            description = "Updates a custom field definition")
+    public ResponseEntity<ApiResponse<CustomFieldDTO>> updateCustomField(
+            @PathVariable UUID id,
+            @PathVariable UUID fieldId,
+            @Valid @RequestBody CustomFieldDTO fieldDto,
+            Authentication authentication) {
+        log.info("Updating custom field {} in workspace {} by user {}", 
+                fieldId, id, authentication.getName());
+        CustomFieldDTO updated = customFieldService.updateCustomField(id, fieldId, fieldDto);
+        return ResponseEntity.ok(ApiResponse.success("Custom field updated successfully", updated));
+    }
+
+    @DeleteMapping("/{id}/custom-fields/{fieldId}")
+    @Operation(summary = "Delete custom field", 
+            description = "Deletes a custom field definition (soft delete)")
+    public ResponseEntity<ApiResponse<Void>> deleteCustomField(
+            @PathVariable UUID id,
+            @PathVariable UUID fieldId,
+            Authentication authentication) {
+        log.info("Deleting custom field {} from workspace {} by user {}", 
+                fieldId, id, authentication.getName());
+        customFieldService.deleteCustomField(id, fieldId);
+        return ResponseEntity.ok(ApiResponse.success("Custom field deleted successfully"));
+    }
+
+    // Statistics and Analytics Endpoints
+
+    @GetMapping("/{id}/statistics")
+    @Operation(summary = "Get workspace statistics", 
+            description = "Get comprehensive statistics about the workspace")
+    public ResponseEntity<ApiResponse<WorkspaceStatisticsDTO>> getWorkspaceStatistics(
+            @PathVariable UUID id) {
+        log.info("Fetching statistics for workspace: {}", id);
+        WorkspaceStatisticsDTO stats = workspaceService.getWorkspaceStatistics(id);
+        return ResponseEntity.ok(ApiResponse.success(stats));
+    }
+
+    @GetMapping("/{id}/activity")
+    @Operation(summary = "Get workspace activity", 
+            description = "Get recent activity feed for the workspace")
+    public ResponseEntity<ApiResponse<Page<ActivityDTO>>> getWorkspaceActivity(
+            @PathVariable UUID id,
+            @PageableDefault(size = 50, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
+        log.info("Fetching activity for workspace: {}", id);
+        Page<ActivityDTO> activity = workspaceService.getWorkspaceActivity(id, pageable);
+        return ResponseEntity.ok(ApiResponse.success(activity));
+    }
+
+    // Archive and Restore Operations
+
+    @PostMapping("/{id}/archive")
+    @Operation(summary = "Archive workspace", 
+            description = "Archives a workspace (can be restored later)")
+    public ResponseEntity<ApiResponse<Void>> archiveWorkspace(
+            @PathVariable UUID id,
+            Authentication authentication) {
+        UUID userId = UUID.fromString(authentication.getName());
+        log.info("Archiving workspace: {} by user: {}", id, userId);
+        workspaceService.archiveWorkspace(id, userId);
+        return ResponseEntity.ok(ApiResponse.success("Workspace archived successfully"));
+    }
+
+    @PostMapping("/{id}/restore")
+    @Operation(summary = "Restore workspace", 
+            description = "Restores an archived workspace")
+    public ResponseEntity<ApiResponse<WorkspaceDTO>> restoreWorkspace(
+            @PathVariable UUID id,
+            Authentication authentication) {
+        UUID userId = UUID.fromString(authentication.getName());
+        log.info("Restoring workspace: {} by user: {}", id, userId);
+        WorkspaceDTO restored = workspaceService.restoreWorkspace(id, userId);
+        return ResponseEntity.ok(ApiResponse.success("Workspace restored successfully", restored));
+    }
+
+    @PostMapping("/{id}/duplicate")
+    @Operation(summary = "Duplicate workspace", 
+            description = "Creates a copy of the workspace with a new name")
+    public ResponseEntity<ApiResponse<WorkspaceDTO>> duplicateWorkspace(
+            @PathVariable UUID id,
+            @RequestParam String name,
+            Authentication authentication) {
+        UUID userId = UUID.fromString(authentication.getName());
+        log.info("Duplicating workspace: {} with name: {} by user: {}", id, name, userId);
+        WorkspaceDTO duplicated = workspaceService.duplicateWorkspace(id, name, userId);
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(ApiResponse.success("Workspace duplicated successfully", duplicated));
     }
 }

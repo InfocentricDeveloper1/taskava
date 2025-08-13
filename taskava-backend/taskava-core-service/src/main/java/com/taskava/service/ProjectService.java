@@ -29,6 +29,46 @@ public class ProjectService {
     private final UserRepository userRepository;
     private final WorkspaceMemberRepository workspaceMemberRepository;
 
+    // Overloaded method for workspace-specific projects
+    @PreAuthorize("@workspaceService.canViewWorkspace(#workspaceId, authentication.principal.id)")
+    @Transactional(readOnly = true)
+    public Page<ProjectDTO> getWorkspaceProjects(UUID workspaceId, Boolean archived, UUID teamId, Pageable pageable) {
+        log.info("Fetching projects for workspace: {}, archived: {}, teamId: {}", workspaceId, archived, teamId);
+        
+        Page<Project> projects;
+        if (teamId != null) {
+            projects = projectRepository.findByWorkspaceIdAndTeamId(workspaceId, teamId, pageable);
+        } else if (archived != null && archived) {
+            projects = projectRepository.findArchivedByWorkspaceId(workspaceId, pageable);
+        } else {
+            projects = projectRepository.findActiveByWorkspaceId(workspaceId, pageable);
+        }
+        
+        return projects.map(this::mapToDTO);
+    }
+    
+    @PreAuthorize("hasRole('USER')")
+    @Transactional(readOnly = true)
+    public List<ProjectDTO> getRecentProjects(UUID workspaceId, UUID userId, int limit) {
+        log.info("Fetching recent projects for user {} in workspace {}", userId, workspaceId);
+        
+        // TODO: Implement actual recent project tracking based on user access logs
+        List<Project> projects = projectRepository.findRecentByUserAndWorkspace(userId, workspaceId, limit);
+        
+        return projects.stream()
+                .map(this::mapToDTO)
+                .collect(Collectors.toList());
+    }
+    
+    @PreAuthorize("@workspaceService.canViewWorkspace(#workspaceId, authentication.principal.id)")
+    @Transactional(readOnly = true)
+    public Long countWorkspaceProjects(UUID workspaceId, Boolean archived) {
+        if (archived != null && archived) {
+            return projectRepository.countArchivedByWorkspaceId(workspaceId);
+        }
+        return projectRepository.countActiveByWorkspaceId(workspaceId);
+    }
+    
     /**
      * Create a new project
      */

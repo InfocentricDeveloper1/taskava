@@ -5,6 +5,9 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-validation'
     implementation 'org.springframework.boot:spring-boot-starter-json'
     
+    // OpenAPI for documentation annotations
+    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui'
+    
     // Utilities
     implementation 'org.apache.commons:commons-lang3'
     implementation 'com.google.guava:guava'

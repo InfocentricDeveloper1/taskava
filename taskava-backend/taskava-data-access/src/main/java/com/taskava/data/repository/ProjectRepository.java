@@ -117,4 +117,27 @@ public interface ProjectRepository extends JpaRepository<Project, UUID>, JpaSpec
            "AND m.id = :userId " +
            "AND p.deleted = false")
     boolean isMember(@Param("projectId") UUID projectId, @Param("userId") UUID userId);
+
+    // Find active projects by workspace
+    @Query("SELECT p FROM Project p WHERE p.workspace.id = :workspaceId AND p.status != 'ARCHIVED' AND p.deleted = false")
+    Page<Project> findActiveByWorkspaceId(@Param("workspaceId") UUID workspaceId, Pageable pageable);
+
+    // Find projects by workspace and team
+    @Query("SELECT p FROM Project p WHERE p.workspace.id = :workspaceId AND p.team.id = :teamId AND p.deleted = false")
+    Page<Project> findByWorkspaceIdAndTeamId(@Param("workspaceId") UUID workspaceId, @Param("teamId") UUID teamId, Pageable pageable);
+
+    // Count archived projects
+    @Query("SELECT COUNT(p) FROM Project p WHERE p.workspace.id = :workspaceId AND p.status = 'ARCHIVED' AND p.deleted = false")
+    Long countArchivedByWorkspaceId(@Param("workspaceId") UUID workspaceId);
+
+    // Find recent projects accessed by user (placeholder - needs activity tracking)
+    @Query("SELECT p FROM Project p " +
+           "JOIN p.members m " +
+           "WHERE p.workspace.id = :workspaceId " +
+           "AND m.id = :userId " +
+           "AND p.deleted = false " +
+           "ORDER BY p.updatedAt DESC")
+    List<Project> findRecentByUserAndWorkspace(@Param("userId") UUID userId, 
+                                               @Param("workspaceId") UUID workspaceId, 
+                                               @Param("limit") int limit);
 }

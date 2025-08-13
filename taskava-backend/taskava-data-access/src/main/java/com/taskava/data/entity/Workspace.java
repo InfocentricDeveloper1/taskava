@@ -4,8 +4,10 @@ import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.Where;
 
+import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.UUID;
 
 @Entity
 @Table(name = "workspaces",
@@ -60,6 +62,15 @@ public class Workspace extends BaseEntity {
 
     @OneToMany(mappedBy = "workspace", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private Set<Tag> tags = new HashSet<>();
+
+    @Column(name = "is_archived")
+    private boolean archived = false;
+
+    @Column(name = "archived_at")
+    private LocalDateTime archivedAt;
+
+    @Column(name = "archived_by")
+    private UUID archivedBy;
 
     public enum Visibility {
         PRIVATE,           // Only workspace members
