@@ -4,6 +4,9 @@ import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { TestStyling } from './TestStyling';
 import { TasksDemo } from './pages/TasksDemo';
 import { KanbanView } from './components/tasks/KanbanView';
+import { KiboKanbanPage } from './pages/KiboKanbanPage';
+import { KiboGanttPage } from './pages/KiboGanttPage';
+import { KiboCalendarPage } from './pages/KiboCalendarPage';
 import { Button } from './components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from './components/ui/card';
 import { Badge } from './components/ui/badge';
@@ -17,7 +20,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from './components/ui/dropdown-menu';
-import { FolderKanban, CheckSquare, Users, Calendar, Settings, Search, Plus, LogOut, User, MoreVertical } from 'lucide-react';
+import { FolderKanban, CheckSquare, Users, Calendar, Settings, Search, Plus, LogOut, User, MoreVertical, BarChart3 } from 'lucide-react';
 import { cn } from './lib/utils';
 
 const queryClient = new QueryClient({
@@ -52,9 +55,36 @@ function App() {
                 <Link to="/tasks" className="transition-colors hover:text-foreground/80 text-muted-foreground">
                   Tasks
                 </Link>
-                <Link to="/tasks-demo" className="transition-colors hover:text-foreground/80 text-muted-foreground">
-                  Tasks Demo
-                </Link>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="sm" className="h-auto px-2 py-1.5 text-sm font-medium">
+                      Kibo UI
+                      <MoreVertical className="ml-1 h-3 w-3" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="start">
+                    <DropdownMenuLabel>Kibo UI Components</DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem asChild>
+                      <Link to="/kibo-kanban" className="flex items-center">
+                        <FolderKanban className="mr-2 h-4 w-4" />
+                        Kanban Board
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link to="/kibo-gantt" className="flex items-center">
+                        <BarChart3 className="mr-2 h-4 w-4" />
+                        Gantt Chart
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link to="/kibo-calendar" className="flex items-center">
+                        <Calendar className="mr-2 h-4 w-4" />
+                        Calendar View
+                      </Link>
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </nav>
             </div>
             <div className="flex flex-1 items-center justify-between space-x-2 md:justify-end">
@@ -116,6 +146,10 @@ function App() {
             <Route path="/tasks" element={<Tasks />} />
             <Route path="/tasks-demo" element={<TasksDemo />} />
             <Route path="/test" element={<TestStyling />} />
+            {/* Kibo UI Components */}
+            <Route path="/kibo-kanban" element={<KiboKanbanPage />} />
+            <Route path="/kibo-gantt" element={<KiboGanttPage />} />
+            <Route path="/kibo-calendar" element={<KiboCalendarPage />} />
           </Routes>
         </main>
       </div>
